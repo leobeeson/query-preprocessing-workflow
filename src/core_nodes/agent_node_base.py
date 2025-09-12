@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Type, TypeVar
+from typing import Type, TypeVar, Optional
 from pydantic import BaseModel
 
 from src.clients.llm_clients.llm_client_interface import LLMClientInterface
+from src.models.llm_metrics import LLMMetrics
 
 T = TypeVar('T', bound=BaseModel)
 
@@ -20,6 +21,7 @@ class AgentNodeBase(ABC):
         self.model_name = model_name
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.last_metrics: Optional[LLMMetrics] = None
 
 
     def set_prompts(self, system_prompt: str, task_prompt: str) -> None:
@@ -42,7 +44,7 @@ class AgentNodeBase(ABC):
         # Generate the task prompt with user input
         task_prompt = self.task_prompt.format(query=user_input) if hasattr(self, 'task_prompt') else user_input
         
-        # Call LLM with the prompts
+        # Call LLM with the prompts (now returns LLMResponse)
         llm_response = await self.llm_client.generate(
             system_prompt=self.system_prompt,
             user_prompt=task_prompt,
@@ -50,5 +52,12 @@ class AgentNodeBase(ABC):
             max_tokens=self.max_tokens
         )
         
+        # Store metrics for later retrieval
+        self.last_metrics = llm_response.metrics
+        
         # Parse and return the response
-        return self.parse_response(llm_response)
+        return self.parse_response(llm_response.text)
+    
+    def get_last_metrics(self) -> Optional[LLMMetrics]:
+        """Get metrics from the last LLM call"""
+        return self.last_metrics

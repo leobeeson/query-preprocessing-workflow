@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 from src.clients.llm_clients.anthropic_llm_client import AnthropicLLMClient
 from src.workflow_nodes.query_preprocessing.processable_entity_extraction_agent import ProcessableEntityExtractionAgent
+from src.core_nodes.metrics_aggregator import MetricsAggregator
 
 
 async def test_processable_entity_extraction():
@@ -71,6 +72,7 @@ async def test_processable_entity_extraction():
     
     success_count = 0
     failure_count = 0
+    metrics_aggregator = MetricsAggregator()
     
     for i, query in enumerate(test_queries, 1):
         print(f"\n[{i}/{len(test_queries)}] 📝 Query: {query}")
@@ -92,6 +94,13 @@ async def test_processable_entity_extraction():
             entities_dict = [{"type": e.type, "value": e.value} for e in result.entities]
             print(f"\n📄 JSON: {json.dumps(entities_dict, ensure_ascii=False)}")
             
+            # Get and display metrics
+            metrics = agent.get_last_metrics()
+            if metrics:
+                print(f"\n⏱️  Response Time: {metrics.format_time()}")
+                print(f"💰 Cost: {metrics.format_cost()} ({metrics.input_tokens} in / {metrics.output_tokens} out tokens)")
+                metrics_aggregator.add_metrics("ProcessableEntityExtraction", metrics)
+            
             success_count += 1
                 
         except Exception as e:
@@ -107,6 +116,20 @@ async def test_processable_entity_extraction():
         print(f"❌ Failed: {failure_count}/{len(test_queries)}")
     print(f"📊 Success Rate: {(success_count/len(test_queries))*100:.1f}%")
     print("=" * 80)
+    
+    # Display metrics summary
+    print("\n" + metrics_aggregator.format_summary())
+    
+    # Show averages
+    summary = metrics_aggregator.get_summary()
+    if summary['total_calls'] > 0:
+        print("\n" + "=" * 60)
+        print("AVERAGE METRICS")
+        print("=" * 60)
+        print(f"💵 Average Cost per Query: ${summary['total_cost']/summary['total_calls']:.6f}")
+        print(f"⚡ Average Response Time: {summary['avg_response_time_ms']:.0f}ms ({summary['avg_response_time_ms']/1000:.2f}s)")
+        print(f"📊 Average Tokens per Query: {summary['total_tokens']/summary['total_calls']:.0f}")
+        print("=" * 60)
 
 
 if __name__ == "__main__":

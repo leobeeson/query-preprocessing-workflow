@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 
+from src.models.llm_metrics import LLMResponse
+
 
 class LLMClientInterface(ABC):
     @abstractmethod
@@ -10,6 +12,6 @@ class LLMClientInterface(ABC):
         user_prompt: str,
         temperature: float = 0.1,
         max_tokens: int = 1000
-    ) -> str:
-        """Generate LLM response"""
+    ) -> LLMResponse:
+        """Generate LLM response with metrics"""
         pass

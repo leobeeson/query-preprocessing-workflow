@@ -38,7 +38,7 @@ class CategoryNormalisationAgent(AgentNodeBase):
         # Build the task prompt with query and entities
         task_prompt = get_task(input_data.query, entities_xml.strip())
         
-        # Call LLM with the prompts
+        # Call LLM with the prompts (now returns LLMResponse)
         llm_response = await self.llm_client.generate(
             system_prompt=self.system_prompt,
             user_prompt=task_prompt,
@@ -46,8 +46,11 @@ class CategoryNormalisationAgent(AgentNodeBase):
             max_tokens=self.max_tokens
         )
         
+        # Store metrics for later retrieval
+        self.last_metrics = llm_response.metrics
+        
         # Parse and return the response
-        return self.parse_response(llm_response)
+        return self.parse_response(llm_response.text)
     
     def parse_response(self, llm_response: str) -> CategoryNormalisationOutput:
         """Parse the LLM response to extract normalised categories"""
