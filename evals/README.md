@@ -175,7 +175,7 @@ EvalCase(
     expected_output=ExpectedOutput(...),  # Documentation only
     field_validations={
         "field1": Exact(value="specific"),
-        "field2": Substring(substring="partial"),
+        "field2": Substring(value="partial"),
         "field3": OneOf(values=["option1", "option2"])
     }
 )
@@ -210,7 +210,7 @@ EvalCase(
 | Validator | Purpose | Example | Use Case |
 |-----------|---------|---------|----------|
 | `Exact` | Perfect match | `Exact(value="hello")` | Known, fixed values |
-| `Substring` | Contains substring | `Substring(substring="world")` | Partial matching |
+| `Substring` | Contains substring | `Substring(value="world")` | Partial matching |
 | `OneOf` | Value in set | `OneOf(values=[1, 2, 3])` | Multiple valid options |
 | `Contains` | List has items | `Contains(values=["a", "b"])` | Required list elements |
 | `AllOf` | List has all items | `AllOf(values=["x", "y"])` | Complete set required |
@@ -226,7 +226,7 @@ field_validations={
     "entities": ListMatches(items=[
         {
             "type": Exact(value="category"),
-            "value": Substring(substring="transport")
+            "value": Substring(value="transport")
         },
         {
             "type": Exact(value="merchant"),
@@ -263,7 +263,7 @@ field_validations={
     "items": ListMatches(items=[
         {
             "category": Exact(value="food"),        # Must be exactly "food"
-            "name": Substring(substring="apple")    # Can be "apple", "pineapple", etc.
+            "name": Substring(value="apple")    # Can be "apple", "pineapple", etc.
         }
     ])
 }
@@ -301,7 +301,7 @@ field_validations={
 ```python
 field_validations={
     "status": Exact(value="success"),                    # Strict
-    "message": Substring(substring="completed"),         # Flexible
+    "message": Substring(value="completed"),         # Flexible
     "items": ListMatches(items=[...]),                  # Complex
     "metadata": Criteria(criteria=["Should be valid"])  # Semantic
 }
@@ -338,7 +338,7 @@ def test_basic():
         "expected": YourOutput(result="expected"),
         "field_validations": {
             "entities": ListMatches(items=[
-                {"type": Exact(value="person"), "name": Substring(substring="John")}
+                {"type": Exact(value="person"), "name": Substring(value="John")}
             ])
         }
     }
@@ -517,7 +517,7 @@ Aggregated statistics and failed cases:
 # Testing that something IS extracted
 field_validations={
     "entities": ListMatches(items=[
-        {"type": Exact(value="date"), "value": Substring(substring="2024")}
+        {"type": Exact(value="date"), "value": Substring(value="2024")}
     ])
 }
 
@@ -622,9 +622,9 @@ def test_invoice():
         "field_validations": {
             # Check critical fields are found, allow variations in value format
             "entities": ListMatches(items=[
-                {"type": Exact(value="invoice_number"), "value": Substring(substring="12345")},
-                {"type": Exact(value="vendor"), "value": Substring(substring="ACME")},
-                {"type": Exact(value="amount"), "value": Substring(substring="1234")}
+                {"type": Exact(value="invoice_number"), "value": Substring(value="12345")},
+                {"type": Exact(value="vendor"), "value": Substring(value="ACME")},
+                {"type": Exact(value="amount"), "value": Substring(value="1234")}
             ])
         }
     }
@@ -708,7 +708,7 @@ def test_complex():
             ]),
 
             # Message should contain keyword
-            "message": Substring(substring="processed successfully"),
+            "message": Substring(value="processed successfully"),
 
             # Metadata quality check
             "metadata": Criteria(criteria=[

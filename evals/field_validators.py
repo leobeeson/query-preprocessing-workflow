@@ -50,7 +50,7 @@ class ListMatches(FieldValidator):
 
     Example:
         ListMatches(items=[
-            {"type": Exact("category"), "value": Substring("transport")}
+            {"type": Exact(value="category"), "value": Substring(value="transport")}
         ])
     """
     items: List[dict]

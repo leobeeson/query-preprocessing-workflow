@@ -802,3 +802,81 @@ def eval_ignore_channel():
         ])
     }
     }
+
+
+# ========== Budget Entity Tests (1) ==========
+
+@eval_case(
+    name="budget_query",
+    agent_class=ProcessableEntityExtractionAgent,
+    description="Extract budget entity and category",
+    tags=["budget", "category"]
+)
+def eval_budget_query():
+    return {
+        "input": QueryInput(query="My expenses budget?"),
+        "expected": ProcessableEntityExtractionOutput(
+            entities=[
+                Entity(type="category", value="expenses"),
+                Entity(type="budget", value="budget")
+            ]
+        ),
+        "field_validations": {
+            "entities": ListMatches(items=[
+                {"type": Exact(value="category"), "value": Exact(value="expenses")},
+                {"type": Exact(value="budget"), "value": Exact(value="budget")}
+            ])
+        }
+    }
+
+
+# ========== Compound Entity Tests (1) ==========
+
+@eval_case(
+    name="home_repairs_category",
+    agent_class=ProcessableEntityExtractionAgent,
+    description="Extract compound category term 'home repairs'",
+    tags=["category", "compound", "temporal"]
+)
+def eval_home_repairs_category():
+    return {
+        "input": QueryInput(query="How much I have spent on home repairs in 2025?"),
+        "expected": ProcessableEntityExtractionOutput(
+            entities=[
+                Entity(type="category", value="home repairs"),
+                Entity(type="temporal", value="2025")
+            ]
+        ),
+        "field_validations": {
+            "entities": ListMatches(items=[
+                {"type": Exact(value="category"), "value": Exact(value="home repairs")},
+                {"type": Exact(value="temporal"), "value": Exact(value="2025")}
+            ])
+        }
+    }
+
+
+# ========== Tiered Entity Tests (1) ==========
+
+@eval_case(
+    name="tier1_category_income",
+    agent_class=ProcessableEntityExtractionAgent,
+    description="Extract tier 1 category 'income'",
+    tags=["category", "tier1"]
+)
+def eval_tier1_category_income():
+    return {
+        "input": QueryInput(query="Show me all income this year"),
+        "expected": ProcessableEntityExtractionOutput(
+            entities=[
+                Entity(type="category", value="income"),
+                Entity(type="temporal", value="this year")
+            ]
+        ),
+        "field_validations": {
+            "entities": ListMatches(items=[
+                {"type": Exact(value="category"), "value": Exact(value="income")},
+                {"type": Exact(value="temporal"), "value": Exact(value="this year")}
+            ])
+        }
+    }

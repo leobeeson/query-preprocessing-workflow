@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 class ProcessableEntity(BaseModel):
     """Model for a processable entity extracted from user query"""
-    type: Literal["temporal", "category", "merchant", "amount", "environmental"] = Field(
+    type: Literal["temporal", "category", "merchant", "amount", "environmental", "budget"] = Field(
         description="The type of entity"
     )
     value: str = Field(
