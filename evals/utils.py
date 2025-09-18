@@ -3,7 +3,7 @@ Utility functions for the evaluation framework.
 """
 
 from typing import Any, Dict, List
-from .core import EvalResult, ValidationMethod
+from .core import EvalResult
 
 
 def create_summary(results: List[EvalResult]) -> Dict[str, Any]:
@@ -20,13 +20,25 @@ def create_summary(results: List[EvalResult]) -> Dict[str, Any]:
     passed: int = sum(1 for r in results if r.passed)
     failed: int = total - passed
     
-    # Group failures by validation method
-    failures_by_method: Dict[ValidationMethod, List[EvalResult]] = {}
+    # Group failures by type (using failure reason prefix if available)
+    failures_by_type: Dict[str, List[EvalResult]] = {}
     for result in results:
-        if not result.passed and result.validation_method:
-            if result.validation_method not in failures_by_method:
-                failures_by_method[result.validation_method] = []
-            failures_by_method[result.validation_method].append(result)
+        if not result.passed:
+            # Try to categorize by failure reason
+            failure_type = "Unknown"
+            if result.error:
+                failure_type = "Execution Error"
+            elif result.failure_reason:
+                if "Field" in result.failure_reason:
+                    failure_type = "Field Validation"
+                elif "Output mismatch" in result.failure_reason:
+                    failure_type = "Output Mismatch"
+                elif "Semantic" in result.failure_reason:
+                    failure_type = "Semantic Validation"
+
+            if failure_type not in failures_by_type:
+                failures_by_type[failure_type] = []
+            failures_by_type[failure_type].append(result)
     
     # Collect all failed cases
     failed_cases: List[EvalResult] = [r for r in results if not r.passed]
@@ -36,9 +48,9 @@ def create_summary(results: List[EvalResult]) -> Dict[str, Any]:
         "passed": passed,
         "failed": failed,
         "pass_rate": (passed / total * 100) if total > 0 else 0,
-        "failures_by_method": {
-            method.value: len(cases) 
-            for method, cases in failures_by_method.items()
+        "failures_by_type": {
+            failure_type: len(cases)
+            for failure_type, cases in failures_by_type.items()
         },
         "failed_cases": failed_cases
     }
@@ -64,10 +76,10 @@ def print_summary(results: List[EvalResult]) -> None:
     print(f"Failed: {summary['failed']}")
     print(f"Pass rate: {summary['pass_rate']:.1f}%")
     
-    if summary['failures_by_method']:
-        print("\nFailures by validation method:")
-        for method, count in summary['failures_by_method'].items():
-            print(f"  {method}: {count}")
+    if summary['failures_by_type']:
+        print("\nFailures by type:")
+        for failure_type, count in summary['failures_by_type'].items():
+            print(f"  {failure_type}: {count}")
     
     if summary['failed_cases']:
         print("\n" + "=" * 60)
@@ -126,9 +138,6 @@ def format_test_report(results: List[EvalResult]) -> str:
         lines.append("## Failed Tests")
         for result in failed_results:
             lines.append(f"\n### ❌ {result.case_name}")
-            
-            if result.validation_method:
-                lines.append(f"**Validation Method:** {result.validation_method.value}")
             
             if result.error:
                 lines.append(f"**Error:** {result.error}")

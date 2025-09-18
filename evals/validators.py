@@ -182,20 +182,20 @@ class BooleanValidator(Validator):
 class CriteriaValidator(Validator):
     """
     Validator using LLM-as-a-Judge for semantic criteria.
-    
+
     This validator requires an LLMJudge instance to be provided.
     """
-    
+
     def __init__(self, llm_judge: Optional[Any] = None):
         """
         Initialize the criteria validator.
-        
+
         Args:
             llm_judge: LLMJudge instance for evaluation
         """
         self.llm_judge: Optional[Any] = llm_judge
-    
-    
+
+
     async def validate(
         self,
         actual_output: Dict[str, Any],
@@ -205,19 +205,117 @@ class CriteriaValidator(Validator):
         """Validate output against semantic criteria using LLM judge."""
         if not self.llm_judge:
             return False, "LLMJudge not configured for criteria validation"
-        
+
         # Convert output to string for evaluation
         import json
         output_str: str = json.dumps(actual_output, indent=2)
-        
+
         # Evaluate with judge
         judge_result = await self.llm_judge.evaluate(
             output=output_str,
             criteria=expected,
             context=context
         )
-        
+
         if judge_result.passed:
             return True, None
         else:
             return False, judge_result.rationale or "Criteria not met"
+
+
+class EntityListValidator(Validator):
+    """
+    Validator for entity extraction outputs.
+
+    Validates lists of entities with type and value fields.
+    Supports exact matching and subset validation.
+    """
+
+    def __init__(self, field_name: str = "entities", ordered: bool = False):
+        """
+        Initialize the entity list validator.
+
+        Args:
+            field_name: Name of the field containing entities list
+            ordered: Whether order matters in comparison
+        """
+        self.field_name: str = field_name
+        self.ordered: bool = ordered
+
+
+    async def validate(
+        self,
+        actual_output: Dict[str, Any],
+        expected: Union[List[Dict[str, Any]], Dict[str, Any]],
+        context: Optional[Dict[str, Any]] = None
+    ) -> tuple[bool, Optional[str]]:
+        """
+        Validate entity list output.
+
+        Args:
+            actual_output: The actual output containing entities
+            expected: List of expected entities or dict with entities field
+            context: Optional context (unused)
+
+        Returns:
+            Tuple of (passed, failure_reason)
+        """
+        # Extract entities from output
+        actual_entities = actual_output.get(self.field_name, [])
+
+        # Handle expected being a dict (from Pydantic model_dump())
+        if isinstance(expected, dict):
+            expected_entities = expected.get(self.field_name, [])
+        else:
+            expected_entities = expected
+
+        # Handle empty expectations
+        if not expected_entities:
+            if actual_entities:
+                return False, f"Expected no entities, but got {len(actual_entities)}"
+            return True, None
+
+        # Handle empty actual output
+        if not actual_entities:
+            return False, f"Expected {len(expected_entities)} entities, but got none"
+
+        # Normalize entities for comparison
+        def normalize_entity(entity: Dict[str, Any]) -> tuple:
+            """Create a comparable representation of an entity."""
+            return (
+                entity.get('type', '').lower().strip(),
+                entity.get('value', '').strip()
+            )
+
+        # Convert to sets for comparison (if order doesn't matter)
+        if not self.ordered:
+            expected_set = {normalize_entity(e) for e in expected_entities}
+            actual_set = {normalize_entity(e) for e in actual_entities}
+
+            # Check if all expected entities are present
+            missing = expected_set - actual_set
+            if missing:
+                missing_str = ', '.join([f"{t}:{v}" for t, v in missing])
+                return False, f"Missing entities: {missing_str}"
+
+            # Check for unexpected entities (optional - could be lenient)
+            extra = actual_set - expected_set
+            if extra:
+                extra_str = ', '.join([f"{t}:{v}" for t, v in extra])
+                return False, f"Unexpected entities: {extra_str}"
+
+            return True, None
+
+        else:
+            # Ordered comparison
+            if len(actual_entities) != len(expected_entities):
+                return False, f"Expected {len(expected_entities)} entities, got {len(actual_entities)}"
+
+            for i, (exp, act) in enumerate(zip(expected_entities, actual_entities)):
+                exp_norm = normalize_entity(exp)
+                act_norm = normalize_entity(act)
+
+                if exp_norm != act_norm:
+                    return False, f"Entity {i}: expected {exp_norm[0]}:{exp_norm[1]}, got {act_norm[0]}:{act_norm[1]}"
+
+            return True, None

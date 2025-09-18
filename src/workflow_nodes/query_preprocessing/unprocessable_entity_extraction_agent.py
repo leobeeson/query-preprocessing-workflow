@@ -2,6 +2,7 @@ from typing import Type, Literal, cast
 
 from src.core_nodes.agent_node_base import AgentNodeBase
 from src.clients.llm_clients.llm_client_interface import LLMClientInterface
+from src.models.base_models import QueryInput
 from src.models.entity_extraction_models import (
     UnprocessableEntity,
     UnprocessableEntityExtractionOutput
@@ -10,18 +11,15 @@ from src.parsers.xml_tag_parser import parse_list_of_objects
 from src.prompts.unprocessable_entity_extraction_prompt import get_instructions, get_task
 
 
-class UnprocessableEntityExtractionAgent(AgentNodeBase):
+class UnprocessableEntityExtractionAgent(AgentNodeBase[QueryInput, UnprocessableEntityExtractionOutput]):
     def __init__(self, llm_client: LLMClientInterface):
         super().__init__(
             llm_client=llm_client,
             temperature=0.1,
             max_tokens=1500
         )
-        # Set the prompts from the prompt file
-        self.set_prompts(
-            system_prompt=get_instructions(),
-            task_prompt=get_task("{query}")  # Template will be filled by base class
-        )
+        # Set the system prompt from the prompt file
+        self.system_prompt = get_instructions()
     
     def parse_response(self, llm_response: str) -> UnprocessableEntityExtractionOutput:
         """Parse the LLM response to extract unprocessable entities"""
@@ -101,6 +99,14 @@ class UnprocessableEntityExtractionAgent(AgentNodeBase):
             raw_response=llm_response
         )
     
+    def get_input_model(self) -> Type[QueryInput]:
+        """Return the Pydantic model class for the input"""
+        return QueryInput
+
     def get_output_model(self) -> Type[UnprocessableEntityExtractionOutput]:
         """Return the Pydantic model class for the output"""
         return UnprocessableEntityExtractionOutput
+
+    def format_user_prompt(self, input_data: QueryInput) -> str:
+        """Format the input data into a user prompt for the LLM"""
+        return get_task(input_data.query)

@@ -14,6 +14,7 @@ from src.workflow_nodes.query_preprocessing.user_intent_validation_agent import 
 from src.workflow_nodes.query_preprocessing.query_security_validation_agent import QuerySecurityValidationAgent
 from src.workflow_nodes.query_preprocessing.category_normalisation_agent import CategoryNormalisationAgent
 from src.models.category_normalisation_models import CategoryNormalisationInput, CategoryEntity
+from src.models.base_models import QueryInput
 from src.core_nodes.metrics_aggregator import MetricsAggregator
 
 
@@ -43,8 +44,9 @@ async def run_quick_test_suite():
     agent1 = ProcessableEntityExtractionAgent(llm_client=llm_client)
     query = "Show me Tesco groceries over £50 last month"
     print(f"Query: {query}")
-    
-    result = await agent1.process(query)
+
+    query_input = QueryInput(query=query)
+    result = await agent1.process(query_input)
     metrics = agent1.get_last_metrics()
     if metrics:
         print(f"✅ Extracted {len(result.entities)} entities")
@@ -60,8 +62,9 @@ async def run_quick_test_suite():
     agent2 = UnprocessableEntityExtractionAgent(llm_client=llm_client)
     query = "Credit card transactions in London"
     print(f"Query: {query}")
-    
-    result = await agent2.process(query)
+
+    query_input = QueryInput(query=query)
+    result = await agent2.process(query_input)
     metrics = agent2.get_last_metrics()
     if metrics:
         print(f"⚠️  Found {len(result.entities)} unprocessable entities")
@@ -77,8 +80,9 @@ async def run_quick_test_suite():
     agent3 = UserIntentValidationAgent(llm_client=llm_client)
     query = "How much did I spend on groceries?"
     print(f"Query: {query}")
-    
-    result = await agent3.process(query)
+
+    query_input = QueryInput(query=query)
+    result = await agent3.process(query_input)
     metrics = agent3.get_last_metrics()
     if metrics:
         print(f"{'✅ Valid' if result.valid else '❌ Invalid'}: {result.justification}")
@@ -94,8 +98,9 @@ async def run_quick_test_suite():
     agent4 = QuerySecurityValidationAgent(llm_client=llm_client)
     query = "Show me my spending at Tesco"
     print(f"Query: {query}")
-    
-    result = await agent4.process(query)
+
+    query_input = QueryInput(query=query)
+    result = await agent4.process(query_input)
     metrics = agent4.get_last_metrics()
     if metrics:
         print(f"{'✅ Safe' if result.valid else '⚠️  Unsafe'}: {result.justification}")

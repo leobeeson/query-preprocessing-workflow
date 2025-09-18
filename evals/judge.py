@@ -83,15 +83,18 @@ Remember: The output must meet ALL criteria to PASS. If ANY criterion is not met
         
         try:
             # Call LLM client
-            response: str = await self.llm_client.generate(
+            llm_response = await self.llm_client.generate(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 temperature=self.temperature,
                 max_tokens=self.max_tokens
             )
-            
+
+            # Extract text from LLM response
+            response_text: str = llm_response.text if hasattr(llm_response, 'text') else str(llm_response)
+
             # Parse response
-            result: JudgeResult = self._parse_response(response)
+            result: JudgeResult = self._parse_response(response_text)
             return result
             
         except Exception as e:

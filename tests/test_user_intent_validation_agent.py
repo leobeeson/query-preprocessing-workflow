@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 from src.clients.llm_clients.anthropic_llm_client import AnthropicLLMClient
 from src.workflow_nodes.query_preprocessing.user_intent_validation_agent import UserIntentValidationAgent
+from src.models.base_models import QueryInput
 
 
 async def test_user_intent_validation():
@@ -110,7 +111,8 @@ async def test_user_intent_validation():
         
         try:
             # Process the query (returns Pydantic model)
-            result = await agent.process(query)
+            query_input = QueryInput(query=query)
+            result = await agent.process(query_input)
             
             # Display result
             if result.valid:

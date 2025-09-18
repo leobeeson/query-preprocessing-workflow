@@ -1,14 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Type, TypeVar, Optional
+from typing import Type, TypeVar, Optional, Generic
 from pydantic import BaseModel
 
 from src.clients.llm_clients.llm_client_interface import LLMClientInterface
 from src.models.llm_metrics import LLMMetrics
 
-T = TypeVar('T', bound=BaseModel)
+TInput = TypeVar('TInput', bound=BaseModel)
+TOutput = TypeVar('TOutput', bound=BaseModel)
 
 
-class AgentNodeBase(ABC):
+class AgentNodeBase(ABC, Generic[TInput, TOutput]):
       
     def __init__(
         self,
@@ -30,31 +31,41 @@ class AgentNodeBase(ABC):
 
 
     @abstractmethod
-    def parse_response(self, llm_response: str) -> BaseModel:
+    def parse_response(self, llm_response: str) -> TOutput:
         """Parse the LLM response into a Pydantic model"""
         pass
-    
+
     @abstractmethod
-    def get_output_model(self) -> Type[BaseModel]:
+    def get_input_model(self) -> Type[TInput]:
+        """Return the Pydantic model class for the input"""
+        pass
+
+    @abstractmethod
+    def get_output_model(self) -> Type[TOutput]:
         """Return the Pydantic model class for the output"""
         pass
-    
-    async def process(self, user_input: str) -> BaseModel:
+
+    @abstractmethod
+    def format_user_prompt(self, input_data: TInput) -> str:
+        """Format the input data into a user prompt for the LLM"""
+        pass
+
+    async def process(self, input_data: TInput) -> TOutput:
         """Template method that calls LLM and parses response"""
-        # Generate the task prompt with user input
-        task_prompt = self.task_prompt.format(query=user_input) if hasattr(self, 'task_prompt') else user_input
-        
+        # Format the user prompt from input data
+        user_prompt = self.format_user_prompt(input_data)
+
         # Call LLM with the prompts (now returns LLMResponse)
         llm_response = await self.llm_client.generate(
             system_prompt=self.system_prompt,
-            user_prompt=task_prompt,
+            user_prompt=user_prompt,
             temperature=self.temperature,
             max_tokens=self.max_tokens
         )
-        
+
         # Store metrics for later retrieval
         self.last_metrics = llm_response.metrics
-        
+
         # Parse and return the response
         return self.parse_response(llm_response.text)
     

@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from src.clients.llm_clients.anthropic_llm_client import AnthropicLLMClient
 from src.workflow_nodes.query_preprocessing.processable_entity_extraction_agent import ProcessableEntityExtractionAgent
 from src.core_nodes.metrics_aggregator import MetricsAggregator
+from src.models.base_models import QueryInput
 
 
 async def test_processable_entity_extraction():
@@ -80,7 +81,8 @@ async def test_processable_entity_extraction():
         
         try:
             # Process the query (returns Pydantic model)
-            result = await agent.process(query)
+            query_input = QueryInput(query=query)
+            result = await agent.process(query_input)
             
             # Display extracted entities from Pydantic model
             if result.entities:
@@ -117,8 +119,9 @@ async def test_processable_entity_extraction():
     print(f"📊 Success Rate: {(success_count/len(test_queries))*100:.1f}%")
     print("=" * 80)
     
-    # Display metrics summary
-    print("\n" + metrics_aggregator.format_summary())
+    # Display metrics summary if we have any metrics
+    if metrics_aggregator.get_summary()['total_calls'] > 0:
+        print("\n" + metrics_aggregator.format_summary())
     
     # Show averages
     summary = metrics_aggregator.get_summary()

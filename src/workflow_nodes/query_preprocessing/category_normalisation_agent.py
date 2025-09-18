@@ -11,46 +11,15 @@ from src.parsers.xml_tag_parser import parse_list_of_objects
 from src.prompts.category_normalisation_prompt import get_instructions, get_task
 
 
-class CategoryNormalisationAgent(AgentNodeBase):
+class CategoryNormalisationAgent(AgentNodeBase[CategoryNormalisationInput, CategoryNormalisationOutput]):
     def __init__(self, llm_client: LLMClientInterface):
         super().__init__(
             llm_client=llm_client,
             temperature=0.1,
             max_tokens=1000
         )
-        # Set only the system prompt here, task prompt will be built dynamically
+        # Set only the system prompt here
         self.system_prompt = get_instructions()
-    
-    async def process(self, input_data: CategoryNormalisationInput) -> CategoryNormalisationOutput:
-        """
-        Process category entities for normalisation.
-        Overrides base process method to handle structured input.
-        """
-        # Build the entities XML string from the input
-        entities_xml = ""
-        for entity in input_data.entities:
-            entities_xml += f"""<entity>
-<type>{entity.type}</type>
-<value>{entity.value}</value>
-</entity>
-"""
-        
-        # Build the task prompt with query and entities
-        task_prompt = get_task(input_data.query, entities_xml.strip())
-        
-        # Call LLM with the prompts (now returns LLMResponse)
-        llm_response = await self.llm_client.generate(
-            system_prompt=self.system_prompt,
-            user_prompt=task_prompt,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens
-        )
-        
-        # Store metrics for later retrieval
-        self.last_metrics = llm_response.metrics
-        
-        # Parse and return the response
-        return self.parse_response(llm_response.text)
     
     def parse_response(self, llm_response: str) -> CategoryNormalisationOutput:
         """Parse the LLM response to extract normalised categories"""
@@ -76,6 +45,24 @@ class CategoryNormalisationAgent(AgentNodeBase):
             raw_response=llm_response
         )
     
+    def get_input_model(self) -> Type[CategoryNormalisationInput]:
+        """Return the Pydantic model class for the input"""
+        return CategoryNormalisationInput
+
     def get_output_model(self) -> Type[CategoryNormalisationOutput]:
         """Return the Pydantic model class for the output"""
         return CategoryNormalisationOutput
+
+    def format_user_prompt(self, input_data: CategoryNormalisationInput) -> str:
+        """Format the input data into a user prompt for the LLM"""
+        # Build the entities XML string from the input
+        entities_xml = ""
+        for entity in input_data.entities:
+            entities_xml += f"""<entity>
+<type>{entity.type}</type>
+<value>{entity.value}</value>
+</entity>
+"""
+
+        # Build and return the task prompt with query and entities
+        return get_task(input_data.query, entities_xml.strip())

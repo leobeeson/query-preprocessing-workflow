@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 from src.clients.llm_clients.anthropic_llm_client import AnthropicLLMClient
 from src.workflow_nodes.query_preprocessing.query_security_validation_agent import QuerySecurityValidationAgent
+from src.models.base_models import QueryInput
 
 
 async def test_query_security_validation():
@@ -111,7 +112,8 @@ async def test_query_security_validation():
         
         try:
             # Process the query (returns Pydantic model)
-            result = await agent.process(query)
+            query_input = QueryInput(query=query)
+            result = await agent.process(query_input)
             
             # Display result
             if result.valid:

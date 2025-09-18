@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+"""
+Runner for evaluation cases using the decorator pattern.
+"""
+
+import asyncio
+from typing import Optional, List
+
+# Import evaluation cases at top level to trigger decorator registration
+import evals.cases.processable_entity_extraction  # noqa: F401
+
+from evals.registry import EvalRegistry
+from evals.runner import EvalRunner
+from evals.llm_client_config import get_llm_client_or_exit
+
+# Import agent and models
+from src.workflow_nodes.query_preprocessing.processable_entity_extraction_agent import ProcessableEntityExtractionAgent
+from src.models.base_models import QueryInput
+from src.models.entity_extraction_models import ProcessableEntityExtractionOutput
+
+
+async def run_processable_entity_extraction_evals(
+    llm_client,
+    case_names: Optional[List[str]] = None,
+    tags: Optional[List[str]] = None
+):
+    """
+    Run evaluation cases for ProcessableEntityExtractionAgent.
+
+    Args:
+        llm_client: The LLM client to use
+        case_names: Optional list of specific case names to run
+        tags: Optional list of tags to filter cases by
+
+    Returns:
+        List of evaluation results
+    """
+    # Create registry and load cases
+    registry = EvalRegistry.for_agent(
+        agent_class=ProcessableEntityExtractionAgent,
+        input_type=QueryInput,
+        output_type=ProcessableEntityExtractionOutput
+    )
+
+    # Print registry summary
+    summary = registry.summary()
+    print(f"\n{'='*60}")
+    print(f"Evaluation Registry Summary")
+    print(f"Agent: {summary['agent']}")
+    print(f"Total cases: {summary['total_cases']}")
+    print(f"Available tags: {', '.join(summary['tags'])}")
+    print(f"{'='*60}\n")
+
+    # Get cases to run
+    if case_names:
+        cases = registry.get_cases(names=case_names)
+        print(f"Running specific cases: {case_names}")
+    elif tags:
+        cases = registry.get_cases(tags=tags)
+        print(f"Running cases with tags: {tags}")
+    else:
+        cases = registry.get_all_cases()
+        print(f"Running all {len(cases)} cases")
+
+    if not cases:
+        print("No evaluation cases found matching criteria")
+        return []
+
+    # Initialize runner with result saving enabled
+    runner = EvalRunner(
+        agent_class=ProcessableEntityExtractionAgent,
+        llm_client=llm_client,
+        save_results=True  # Enable saving results to disk
+    )
+
+    # Run evaluations with smaller batch size to avoid rate limits
+    results = await runner.run_batch(cases, parallel=True, batch_size=3)
+
+    # Print results summary
+    passed = sum(1 for r in results if r.passed)
+    failed = sum(1 for r in results if not r.passed)
+
+    # Calculate total costs
+    total_cost = sum(r.llm_cost for r in results if r.llm_cost)
+    avg_cost = total_cost / len(results) if results else 0
+
+    print(f"\n{'='*60}")
+    print(f"Evaluation Results")
+    print(f"Passed: {passed}/{len(results)}")
+    print(f"Failed: {failed}/{len(results)}")
+    print(f"Total LLM Cost: ${total_cost:.6f}")
+    print(f"Average Cost per Case: ${avg_cost:.6f}")
+    print(f"{'='*60}\n")
+
+    # Print failures
+    if failed > 0:
+        print("Failed cases:")
+        for result in results:
+            if not result.passed:
+                print(f"  - {result.case_name}: {result.failure_reason or result.error}")
+
+    return results
+
+
+async def main():
+    """Main entry point."""
+    # Get LLM client from centralized config
+    llm_client = get_llm_client_or_exit()
+
+    # Run all evaluations
+    results = await run_processable_entity_extraction_evals(llm_client)
+
+    # Example: Run only specific tags
+    # results = await run_processable_entity_extraction_evals(
+    #     llm_client,
+    #     tags=["merchant", "basic"]
+    # )
+
+    # Example: Run specific cases
+    # results = await run_processable_entity_extraction_evals(
+    #     llm_client,
+    #     case_names=["basic_merchant", "amount_threshold"]
+    # )
+
+    return results
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

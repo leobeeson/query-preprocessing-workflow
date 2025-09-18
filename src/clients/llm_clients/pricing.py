@@ -44,19 +44,37 @@ class ModelPricing:
 class PricingConfig:
     """Central configuration for all LLM model pricing"""
     
-    # Anthropic model pricing (as of 2024)
+    # Anthropic model pricing (as of September 2025)
     ANTHROPIC_PRICING: Dict[str, ModelPricing] = {
-        "claude-3-5-sonnet-20241022": ModelPricing(
-            input_cost_per_million=3.0,   # $3 per million input tokens
+        # Claude Opus 4.1
+        "claude-opus-4-1-20250805": ModelPricing(
+            input_cost_per_million=15.0,   # $15 per million input tokens
+            output_cost_per_million=75.0   # $75 per million output tokens
+        ),
+        # Claude Opus 4
+        "claude-opus-4-20250514": ModelPricing(
+            input_cost_per_million=15.0,   # $15 per million input tokens
+            output_cost_per_million=75.0   # $75 per million output tokens
+        ),
+        # Claude Sonnet 4
+        "claude-sonnet-4-20250514": ModelPricing(
+            input_cost_per_million=3.0,    # $3 per million input tokens
             output_cost_per_million=15.0   # $15 per million output tokens
         ),
-        "claude-3-opus-20240229": ModelPricing(
-            input_cost_per_million=15.0,   # $15 per million input tokens
-            output_cost_per_million=75.0    # $75 per million output tokens
+        # Claude Sonnet 3.7
+        "claude-3-7-sonnet-20250219": ModelPricing(
+            input_cost_per_million=3.0,    # $3 per million input tokens
+            output_cost_per_million=15.0   # $15 per million output tokens
         ),
+        # Claude Haiku 3.5
+        "claude-3-5-haiku-20241022": ModelPricing(
+            input_cost_per_million=0.80,   # $0.80 per million input tokens
+            output_cost_per_million=4.0    # $4 per million output tokens
+        ),
+        # Claude Haiku 3
         "claude-3-haiku-20240307": ModelPricing(
             input_cost_per_million=0.25,   # $0.25 per million input tokens
-            output_cost_per_million=1.25    # $1.25 per million output tokens
+            output_cost_per_million=1.25   # $1.25 per million output tokens
         ),
     }
     

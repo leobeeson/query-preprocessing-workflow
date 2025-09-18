@@ -95,11 +95,17 @@ class QueryPreprocessingWorkflow:
         metrics = {}
         
         # Step 1: Run 4 agents concurrently
+        # Import QueryInput for agents that need it
+        from src.models.base_models import QueryInput
+
+        # Create input for agents
+        query_input = QueryInput(query=query)
+
         results = await asyncio.gather(
-            self.processable_agent.process(query),
-            self.security_agent.process(query),
-            self.unprocessable_agent.process(query),
-            self.intent_agent.process(query),
+            self.processable_agent.process(query_input),
+            self.security_agent.process(query_input),
+            self.unprocessable_agent.process(query_input),
+            self.intent_agent.process(query_input),
             return_exceptions=False  # Let exceptions propagate
         )
         

@@ -2,84 +2,65 @@
 Core data models for the evaluation framework.
 """
 
-from typing import Any, Dict, List, Optional, Union
-from enum import Enum
-from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Generic, TypeVar
+from pydantic import BaseModel, Field, model_validator
 
 
-class ValidationMethod(Enum):
-    """Types of validation methods available."""
-    STRING = "string"
-    MULTI_CHOICE = "multi_choice"
-    BOOLEAN = "boolean"
-    CRITERIA = "criteria"
+# Type variables for generic EvalCase
+TInput = TypeVar('TInput', bound=BaseModel)
+TOutput = TypeVar('TOutput')
 
 
-@dataclass
-class EvalCase:
+class EvalCase(BaseModel, Generic[TInput, TOutput]):
     """
-    A single evaluation test case.
-    
+    A single evaluation test case with typed input and output.
+
     Attributes:
         name: Unique identifier for the test case
-        input_data: Input data to pass to the agent node
-        expected_output: Expected output (string, list, bool, or dict)
-        criteria: Optional list of semantic criteria for LLM-as-a-Judge
+        input_data: Typed input data to pass to the agent node
+        expected_output: Expected typed output
+        field_validations: Validation rules for specific fields (including semantic via Criteria)
         description: Optional human-readable description
     """
-    name: str
-    input_data: Dict[str, Any]
-    expected_output: Optional[Union[str, List[str], bool, Dict[str, Any]]] = None
-    criteria: Optional[List[str]] = None
-    description: Optional[str] = None
-    
-    def __post_init__(self) -> None:
-        """Validate that either expected_output or criteria is provided."""
-        if self.expected_output is None and self.criteria is None:
-            raise ValueError(
-                f"EvalCase '{self.name}' must have either expected_output or criteria"
-            )
-        
-        if self.expected_output is not None and self.criteria is not None:
-            raise ValueError(
-                f"EvalCase '{self.name}' cannot have both expected_output and criteria. "
-                "Choose one validation method."
-            )
-    
-    
-    def get_validation_method(self) -> ValidationMethod:
-        """Determine the validation method based on the expected output type."""
-        if self.criteria is not None:
-            return ValidationMethod.CRITERIA
-        elif isinstance(self.expected_output, bool):
-            return ValidationMethod.BOOLEAN
-        elif isinstance(self.expected_output, list):
-            return ValidationMethod.MULTI_CHOICE
-        else:
-            return ValidationMethod.STRING
+    name: str = Field(description="Unique identifier for the test case")
+    input_data: TInput = Field(description="Typed input data for the agent")
+    expected_output: TOutput = Field(description="Expected output (documentation of what we expect)")
+    field_validations: Optional[Dict[str, Any]] = Field(default=None, description="Field-level validation rules")
+    description: Optional[str] = Field(default=None, description="Human-readable description")
 
 
-@dataclass
-class EvalResult:
+class EvalResult(BaseModel):
     """
     Result of running an evaluation test case.
-    
+
     Attributes:
         case_name: Name of the test case
-        passed: Whether the test passed
-        actual_output: The actual output from the agent
+        input: The input data that was sent to the agent
         expected_output: The expected output (if applicable)
-        validation_method: The validation method used
+        actual_output: The actual output from the agent
+        passed: Whether the test passed
         error: Any error that occurred during execution
         failure_reason: Explanation of why the test failed (if applicable)
+        model_name: Name of the model used
+        timestamp: When the test was executed
+        duration_ms: How long the test took in milliseconds
+        llm_cost: Cost of LLM API calls for this test in USD
+        input_tokens: Number of input tokens used
+        output_tokens: Number of output tokens used
     """
-    case_name: str
-    passed: bool
-    actual_output: Dict[str, Any]
-    expected_output: Optional[Any] = None
-    validation_method: Optional[ValidationMethod] = None
-    error: Optional[str] = None
-    failure_reason: Optional[str] = None
+    case_name: str = Field(description="Name of the test case")
+    passed: bool = Field(description="Whether the test passed")
+    input: Optional[Any] = Field(default=None, description="Input data sent to the agent")
+    expected_output: Optional[Any] = Field(default=None, description="The expected output")
+    actual_output: Any = Field(description="The actual output from the agent")
+    error: Optional[str] = Field(default=None, description="Error during execution")
+    failure_reason: Optional[str] = Field(default=None, description="Why the test failed")
+    model_name: Optional[str] = Field(default=None, description="Model name used for this test")
+    timestamp: Optional[str] = Field(default=None, description="ISO timestamp of execution")
+    duration_ms: Optional[float] = Field(default=None, description="Execution time in milliseconds")
+    llm_cost: Optional[float] = Field(default=None, description="LLM API cost in USD")
+    input_tokens: Optional[int] = Field(default=None, description="Input tokens used")
+    output_tokens: Optional[int] = Field(default=None, description="Output tokens used")
     
     def __str__(self) -> str:
         """String representation for clear reporting."""
@@ -104,9 +85,6 @@ class EvalResult:
         
         if self.failure_reason:
             details.append(f"Failure reason: {self.failure_reason}")
-        
-        if self.validation_method:
-            details.append(f"Validation method: {self.validation_method.value}")
         
         if self.expected_output is not None:
             details.append(f"Expected: {self.expected_output}")

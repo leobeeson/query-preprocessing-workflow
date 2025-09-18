@@ -8,36 +8,37 @@ A lightweight framework for evaluating LLM agent nodes with support for:
 - Clear pass/fail reporting
 """
 
-from .core import EvalCase, EvalResult, ValidationMethod
-from .context import ConversationContext
-from .validators import (
-    Validator,
-    StringValidator,
-    MultiChoiceValidator,
-    BooleanValidator,
-    CriteriaValidator,
-)
+from .core import EvalCase, EvalResult
+from .evaluator import Evaluator
+from .field_validators import Exact, OneOf, AllOf, Contains, Criteria
 from .judge import LLMJudge, JudgeResult
 from .runner import EvalRunner
+from .decorators import eval_case, get_eval_case
+from .registry import EvalRegistry
 from .utils import create_summary, print_summary
 
 __all__ = [
     # Core
     "EvalCase",
     "EvalResult",
-    "ValidationMethod",
-    "ConversationContext",
-    # Validators
-    "Validator",
-    "StringValidator",
-    "MultiChoiceValidator",
-    "BooleanValidator",
-    "CriteriaValidator",
+    # Evaluator
+    "Evaluator",
+    # Field Validators
+    "Exact",
+    "OneOf",
+    "AllOf",
+    "Contains",
+    "Criteria",
     # Judge
     "LLMJudge",
     "JudgeResult",
     # Runner
     "EvalRunner",
+    # Decorators
+    "eval_case",
+    "get_eval_case",
+    # Registry
+    "EvalRegistry",
     # Utils
     "create_summary",
     "print_summary",
