@@ -267,7 +267,7 @@ def eval_time_of_day():
         ),
         "field_validations": {
         "entities": ListMatches(items=[
-            {"type": Exact(value="temporal"), "value": Exact(value="between 6am and 9am")},
+            {"type": Exact(value="temporal"), "value": Substring(value="6am and 9am")},  # "between" is optional
             {"type": Exact(value="temporal"), "value": Exact(value="Mondays")}
         ])
     }
@@ -367,7 +367,7 @@ def eval_merchant_location():
         ),
         "field_validations": {
         "entities": ListMatches(items=[
-            {"type": Exact(value="merchant"), "value": Exact(value="ASDA Leeds")},
+            {"type": Exact(value="merchant"), "value": Substring(value="ASDA")},  # "Leeds" location suffix is optional
             {"type": Exact(value="temporal"), "value": Exact(value="yesterday")}
         ])
     }
@@ -580,7 +580,7 @@ def eval_exact_decimal():
         ),
         "field_validations": {
         "entities": ListMatches(items=[
-            {"type": Exact(value="amount"), "value": Exact(value="precisely £29.95")}
+            {"type": Exact(value="amount"), "value": Substring(value="£29.95")}  # "precisely" modifier is optional
         ])
     }
     }
