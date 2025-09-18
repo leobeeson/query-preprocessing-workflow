@@ -1,2 +1,117 @@
+# ---- Python bytecode / cache ----
+__pycache__/
+*.py[cod]
+*.$py.class
+*.pyc
+
+# ---- Compiled extensions ----
+*.so
+*.pyd
+*.dll
+*.dylib
+
+# ---- Packaging / distribution ----
+.Python
+build/
+dist/
+.eggs/
+*.egg-info/
+*.egg
+wheels/
+share/python-wheels/
+pip-wheel-metadata/
+MANIFEST
+
+# ---- Installer logs ----
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+ENV/
+.virtualenv/
+.conda/
+# If Poetry creates a venv inside the project folder, keep .venv/ ignored
+
+# ---- Python version managers ----
+.python-version      # pyenv
+
+# ---- PDM ----
+.pdm-python
+
+# ---- Testing / coverage ----
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+htmlcov/
+.hypothesis/
+
+# ---- Type checkers / linters ----
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+.pyre/
+.ruff_cache/
+
+# ---- Jupyter / IPython ----
+.ipynb_checkpoints/
+.ipython/
+.profile_default/
+
+# ---- Framework-local data (safe defaults) ----
+db.sqlite3
+*.sqlite3
+
+# ---- Documentation ----
+docs/_build/
+doc/_build/
+
+# ---- PyInstaller ----
+*.spec
+
+# ---- Logs / run artefacts ----
+*.log
+logs/
+
+# ---- Environment & secrets ----
+.env
+.env.*
+.envrc
+.secrets/
+*.secret
+*.key
+
+# ---- Editors / IDE ----
+.vscode/
+.idea/
+*.sublime-*
+.ropeproject/
+.spyproject/
+
+# ---- OS cruft ----
+.DS_Store
+Thumbs.db
+Desktop.ini
+Icon\r
+
+# ---- Vim / Emacs / backups ----
+*.swp
+*.swo
+*.swm
+*~
+*.bak
+
+# Project-specific ignores
 .env
 ai_docs
+evals/results
