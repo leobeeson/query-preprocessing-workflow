@@ -15,7 +15,7 @@ from src.models.entity_extraction_models import ProcessableEntityExtractionOutpu
     name="basic_merchant",
     agent_class=ProcessableEntityExtractionAgent,
     description="Simple merchant extraction",
-    tags=["merchant", "basic"]
+    tags=["merchant", "basic", "dev_cases"]
 )
 def eval_basic_merchant():
     return {
@@ -35,7 +35,7 @@ def eval_basic_merchant():
     name="amount_threshold",
     agent_class=ProcessableEntityExtractionAgent,
     description="Amount threshold with temporal",
-    tags=["amount", "temporal", "basic"]
+    tags=["amount", "temporal", "basic", "dev_cases"]
 )
 def eval_amount_threshold():
     return {
@@ -59,7 +59,7 @@ def eval_amount_threshold():
     name="category_temporal",
     agent_class=ProcessableEntityExtractionAgent,
     description="Category with specific month/year",
-    tags=["category", "temporal", "basic"]
+    tags=["category", "temporal", "basic", "dev_cases"]
 )
 def eval_category_temporal():
     return {
@@ -83,7 +83,7 @@ def eval_category_temporal():
     name="ignore_aggregation",
     agent_class=ProcessableEntityExtractionAgent,
     description="Should not extract aggregation operations",
-    tags=["category", "negative"]
+    tags=["category", "negative", "dev_cases"]
 )
 def eval_ignore_aggregation():
     from evals.field_validators import ListMatches, Exact, Substring
@@ -104,7 +104,7 @@ def eval_ignore_aggregation():
     name="amount_range",
     agent_class=ProcessableEntityExtractionAgent,
     description="Amount range extraction",
-    tags=["amount", "basic"]
+    tags=["amount", "basic", "dev_cases"]
 )
 def eval_amount_range():
     return {
@@ -124,7 +124,7 @@ def eval_amount_range():
     name="simple_merchant",
     agent_class=ProcessableEntityExtractionAgent,
     description="Simple merchant extraction",
-    tags=["merchant", "basic"]
+    tags=["merchant", "basic", "dev_cases"]
 )
 def eval_simple_merchant():
     return {
@@ -144,7 +144,7 @@ def eval_simple_merchant():
     name="no_entities",
     agent_class=ProcessableEntityExtractionAgent,
     description="Query with no processable entities",
-    tags=["negative", "basic"]
+    tags=["negative", "basic", "dev_cases"]
 )
 def eval_no_entities():
     return {
@@ -162,7 +162,7 @@ def eval_no_entities():
     name="relative_temporal",
     agent_class=ProcessableEntityExtractionAgent,
     description="Relative temporal period",
-    tags=["temporal", "relative"]
+    tags=["temporal", "relative", "dev_cases"]
 )
 def eval_relative_temporal():
     return {
@@ -182,7 +182,7 @@ def eval_relative_temporal():
     name="multiple_temporal",
     agent_class=ProcessableEntityExtractionAgent,
     description="Multiple temporal entities",
-    tags=["temporal", "multiple"]
+    tags=["temporal", "multiple", "dev_cases"]
 )
 def eval_multiple_temporal():
     return {
@@ -206,7 +206,7 @@ def eval_multiple_temporal():
     name="holiday_period",
     agent_class=ProcessableEntityExtractionAgent,
     description="Named holiday period",
-    tags=["merchant", "temporal", "holiday"]
+    tags=["merchant", "temporal", "holiday", "dev_cases"]
 )
 def eval_holiday_period():
     return {
@@ -230,7 +230,7 @@ def eval_holiday_period():
     name="fiscal_period",
     agent_class=ProcessableEntityExtractionAgent,
     description="Fiscal quarter period",
-    tags=["category", "temporal", "fiscal"]
+    tags=["category", "temporal", "fiscal", "dev_cases"]
 )
 def eval_fiscal_period():
     return {
@@ -254,7 +254,7 @@ def eval_fiscal_period():
     name="time_of_day",
     agent_class=ProcessableEntityExtractionAgent,
     description="Time of day with day of week",
-    tags=["temporal", "time"]
+    tags=["temporal", "time", "dev_cases"]
 )
 def eval_time_of_day():
     return {
@@ -278,7 +278,7 @@ def eval_time_of_day():
     name="weekend_temporal",
     agent_class=ProcessableEntityExtractionAgent,
     description="Weekday/weekend temporal reference",
-    tags=["temporal", "category", "weekend"]
+    tags=["temporal", "category", "weekend", "dev_cases"]
 )
 def eval_weekend_temporal():
     return {
@@ -305,7 +305,7 @@ def eval_weekend_temporal():
     name="merchant_typo",
     agent_class=ProcessableEntityExtractionAgent,
     description="Merchant with typo should be preserved",
-    tags=["merchant", "typo"]
+    tags=["merchant", "typo", "dev_cases"]
 )
 def eval_merchant_typo():
     return {
@@ -329,7 +329,7 @@ def eval_merchant_typo():
     name="merchant_possessive",
     agent_class=ProcessableEntityExtractionAgent,
     description="Merchant with possessive apostrophe",
-    tags=["merchant", "possessive"]
+    tags=["merchant", "possessive", "dev_cases"]
 )
 def eval_merchant_possessive():
     return {
@@ -353,7 +353,7 @@ def eval_merchant_possessive():
     name="merchant_location",
     agent_class=ProcessableEntityExtractionAgent,
     description="Merchant with location suffix",
-    tags=["merchant", "location"]
+    tags=["merchant", "location", "dev_cases"]
 )
 def eval_merchant_location():
     return {
@@ -377,7 +377,7 @@ def eval_merchant_location():
     name="multiple_merchants",
     agent_class=ProcessableEntityExtractionAgent,
     description="Multiple merchant entities",
-    tags=["merchant", "multiple"]
+    tags=["merchant", "multiple", "dev_cases"]
 )
 def eval_multiple_merchants():
     return {
@@ -401,7 +401,7 @@ def eval_multiple_merchants():
     name="complex_multiple",
     agent_class=ProcessableEntityExtractionAgent,
     description="Complex query with multiple entity types",
-    tags=["merchant", "amount", "temporal", "complex"]
+    tags=["merchant", "amount", "temporal", "complex", "dev_cases"]
 )
 def eval_complex_multiple():
     return {
@@ -431,7 +431,7 @@ def eval_complex_multiple():
     name="compound_category",
     agent_class=ProcessableEntityExtractionAgent,
     description="Compound category phrase",
-    tags=["category", "compound"]
+    tags=["category", "compound", "dev_cases"]
 )
 def eval_compound_category():
     return {
@@ -455,7 +455,7 @@ def eval_compound_category():
     name="utilities_category",
     agent_class=ProcessableEntityExtractionAgent,
     description="Utilities category",
-    tags=["category", "utilities"]
+    tags=["category", "utilities", "dev_cases"]
 )
 def eval_utilities_category():
     return {
@@ -479,7 +479,7 @@ def eval_utilities_category():
     name="entertainment_category",
     agent_class=ProcessableEntityExtractionAgent,
     description="Entertainment category variant",
-    tags=["category", "entertainment"]
+    tags=["category", "entertainment", "dev_cases"]
 )
 def eval_entertainment_category():
     return {
@@ -503,7 +503,7 @@ def eval_entertainment_category():
     name="simple_category",
     agent_class=ProcessableEntityExtractionAgent,
     description="Simple category extraction",
-    tags=["category", "basic"]
+    tags=["category", "basic", "dev_cases"]
 )
 def eval_simple_category():
     return {
@@ -525,7 +525,7 @@ def eval_simple_category():
     name="amount_with_symbol",
     agent_class=ProcessableEntityExtractionAgent,
     description="Amount with pound symbol",
-    tags=["amount", "currency"]
+    tags=["amount", "currency", "dev_cases"]
 )
 def eval_amount_with_symbol():
     return {
@@ -549,7 +549,7 @@ def eval_amount_with_symbol():
     name="amount_without_symbol",
     agent_class=ProcessableEntityExtractionAgent,
     description="Amount without currency symbol",
-    tags=["amount"]
+    tags=["amount", "dev_cases"]
 )
 def eval_amount_without_symbol():
     return {
@@ -569,7 +569,7 @@ def eval_amount_without_symbol():
     name="exact_decimal",
     agent_class=ProcessableEntityExtractionAgent,
     description="Exact decimal amount",
-    tags=["amount", "decimal"]
+    tags=["amount", "decimal", "dev_cases"]
 )
 def eval_exact_decimal():
     return {
@@ -589,7 +589,7 @@ def eval_exact_decimal():
     name="amount_at_threshold",
     agent_class=ProcessableEntityExtractionAgent,
     description="Amount at specific threshold",
-    tags=["amount", "threshold"]
+    tags=["amount", "threshold", "dev_cases"]
 )
 def eval_amount_at_threshold():
     return {
@@ -611,7 +611,7 @@ def eval_amount_at_threshold():
     name="carbon_footprint",
     agent_class=ProcessableEntityExtractionAgent,
     description="Carbon footprint extraction",
-    tags=["environmental", "carbon"]
+    tags=["environmental", "carbon", "dev_cases"]
 )
 def eval_carbon_footprint():
     return {
@@ -637,7 +637,7 @@ def eval_carbon_footprint():
     name="co2_emissions",
     agent_class=ProcessableEntityExtractionAgent,
     description="CO2 emissions extraction",
-    tags=["environmental", "co2"]
+    tags=["environmental", "co2", "dev_cases"]
 )
 def eval_co2_emissions():
     return {
@@ -659,7 +659,7 @@ def eval_co2_emissions():
     name="category_class_reference",
     agent_class=ProcessableEntityExtractionAgent,
     description="Category as class reference",
-    tags=["category", "class-reference"]
+    tags=["category", "class-reference", "dev_cases"]
 )
 def eval_category_class_reference():
     return {
@@ -679,7 +679,7 @@ def eval_category_class_reference():
     name="merchant_class_reference",
     agent_class=ProcessableEntityExtractionAgent,
     description="Merchant as class reference",
-    tags=["merchant", "class-reference"]
+    tags=["merchant", "class-reference", "dev_cases"]
 )
 def eval_merchant_class_reference():
     return {
@@ -699,7 +699,7 @@ def eval_merchant_class_reference():
     name="temporal_class_reference",
     agent_class=ProcessableEntityExtractionAgent,
     description="Month as temporal class reference",
-    tags=["temporal", "class-reference"]
+    tags=["temporal", "class-reference", "dev_cases"]
 )
 def eval_temporal_class_reference():
     return {
@@ -721,7 +721,7 @@ def eval_temporal_class_reference():
     name="ignore_geographic",
     agent_class=ProcessableEntityExtractionAgent,
     description="Should not extract geographic location",
-    tags=["negative", "geographic"]
+    tags=["negative", "geographic", "dev_cases"]
 )
 def eval_ignore_geographic():
     return {
@@ -741,7 +741,7 @@ def eval_ignore_geographic():
     name="ignore_payment_method",
     agent_class=ProcessableEntityExtractionAgent,
     description="Should not extract payment method",
-    tags=["negative", "payment-method"]
+    tags=["negative", "payment-method", "dev_cases"]
 )
 def eval_ignore_payment_method():
     return {
@@ -761,7 +761,7 @@ def eval_ignore_payment_method():
     name="ignore_person_names",
     agent_class=ProcessableEntityExtractionAgent,
     description="Should not extract person names",
-    tags=["negative", "person-names"]
+    tags=["negative", "person-names", "dev_cases"]
 )
 def eval_ignore_person_names():
     return {
@@ -781,7 +781,7 @@ def eval_ignore_person_names():
     name="ignore_channel",
     agent_class=ProcessableEntityExtractionAgent,
     description="Should not extract transaction channel",
-    tags=["negative", "channel"]
+    tags=["negative", "channel", "dev_cases"]
 )
 def eval_ignore_channel():
     return {
@@ -809,7 +809,7 @@ def eval_ignore_channel():
     name="budget_query",
     agent_class=ProcessableEntityExtractionAgent,
     description="Extract budget entity and category",
-    tags=["budget", "category"]
+    tags=["budget", "category", "dev_cases"]
 )
 def eval_budget_query():
     return {
@@ -835,7 +835,7 @@ def eval_budget_query():
     name="home_repairs_category",
     agent_class=ProcessableEntityExtractionAgent,
     description="Extract compound category term 'home repairs'",
-    tags=["category", "compound", "temporal"]
+    tags=["category", "compound", "temporal", "dev_cases"]
 )
 def eval_home_repairs_category():
     return {
@@ -861,7 +861,7 @@ def eval_home_repairs_category():
     name="tier1_category_income",
     agent_class=ProcessableEntityExtractionAgent,
     description="Extract tier 1 category 'income'",
-    tags=["category", "tier1"]
+    tags=["category", "tier1", "dev_cases"]
 )
 def eval_tier1_category_income():
     return {
