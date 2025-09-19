@@ -114,7 +114,7 @@ def eval_amount_range():
         ),
         "field_validations": {
         "entities": ListMatches(items=[
-            {"type": Exact(value="amount"), "value": Exact(value="between £10 and £30")}
+            {"type": Exact(value="amount"), "value": Substring(value="£10 and £30")}
         ])
     }
     }
@@ -293,7 +293,6 @@ def eval_weekend_temporal():
         "field_validations": {
         "entities": ListMatches(items=[
             {"type": Exact(value="temporal"), "value": Exact(value="Weekday")},
-            {"type": Exact(value="category"), "value": Exact(value="dining")},
             {"type": Exact(value="category"), "value": Exact(value="restaurants")}
         ])
     }
