@@ -8,7 +8,7 @@ import asyncio
 from typing import Optional, List, Dict, Any
 
 # Import evaluation cases at top level to trigger decorator registration
-import evals.cases.unprocessable_entity_extraction  # noqa: F401
+import evals.cases.user_intent  # noqa: F401
 
 from src.clients.llm_clients.llm_client_interface import LLMClientInterface
 from evals.core import EvalCase, EvalResult
@@ -17,19 +17,19 @@ from evals.runner import EvalRunner
 from evals.llm_client_config import get_llm_client_or_exit
 
 # Import agent and models
-from src.workflow_nodes.query_preprocessing.unprocessable_entity_extraction_agent import UnprocessableEntityExtractionAgent
+from src.workflow_nodes.query_preprocessing.user_intent_validation_agent import UserIntentValidationAgent
 from src.models.base_models import QueryInput
-from src.models.entity_extraction_models import UnprocessableEntityExtractionOutput
+from src.models.entity_extraction_models import UserIntentValidationOutput
 
 
-async def run_unprocessable_entity_extraction_evals(
+async def run_user_intent_validation_evals(
     llm_client: LLMClientInterface,
     case_names: Optional[List[str]] = None,
     tags: Optional[List[str]] = None,
     tags_match_all: bool = True
 ) -> List[EvalResult]:
     """
-    Run evaluation cases for UnprocessableEntityExtractionAgent.
+    Run evaluation cases for UserIntentValidationAgent.
 
     Args:
         llm_client: The LLM client to use
@@ -42,9 +42,9 @@ async def run_unprocessable_entity_extraction_evals(
     """
     # Create registry and load cases
     registry = EvalRegistry.for_agent(
-        agent_class=UnprocessableEntityExtractionAgent,
+        agent_class=UserIntentValidationAgent,
         input_type=QueryInput,
-        output_type=UnprocessableEntityExtractionOutput
+        output_type=UserIntentValidationOutput
     )
 
     # Print registry summary
@@ -95,7 +95,7 @@ async def run_unprocessable_entity_extraction_evals(
 
     # Initialize runner with result saving enabled
     runner: EvalRunner = EvalRunner(
-        agent_class=UnprocessableEntityExtractionAgent,
+        agent_class=UserIntentValidationAgent,
         llm_client=llm_client,
         save_results=True  # Enable saving results to disk
     )
@@ -132,39 +132,40 @@ async def run_unprocessable_entity_extraction_evals(
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description="Run evaluation cases for UnprocessableEntityExtractionAgent",
+        description="Run evaluation cases for UserIntentValidationAgent",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Run all tests
-  python -m evals.tests.test_eval_decorated_unprocessable_entity_extraction
+  python -m evals.tests.test_eval_decorated_user_intent_validation
 
   # Run tests with a single tag
-  python -m evals.tests.test_eval_decorated_unprocessable_entity_extraction --tags geographic
+  python -m evals.tests.test_eval_decorated_user_intent_validation --tags valid
 
   # Run tests that have ALL specified tags (AND logic)
-  python -m evals.tests.test_eval_decorated_unprocessable_entity_extraction --tags geographic critical
+  python -m evals.tests.test_eval_decorated_user_intent_validation --tags valid spending
 
   # Run tests with specific case names
-  python -m evals.tests.test_eval_decorated_unprocessable_entity_extraction --cases geographic_comparison city_location
+  python -m evals.tests.test_eval_decorated_user_intent_validation --cases spending_analysis financial_advice
 
 Available tags:
-  geographic, payment_method, person_recipient, transaction_channel,
-  product_service, financial_product, transaction_status, account,
-  complex, negative, edge-case, critical, non-critical, dev_cases
+  valid, invalid, spending, advice, category, merchant, subscription,
+  temporal, prediction, environmental, utilities, amount, details,
+  payments, travel, frequency, income, illegal, unrelated, tax,
+  insurance, fuel, vague, edge-case, dev_cases
         """
     )
 
     parser.add_argument(
         "--tags",
         nargs="+",
-        help="Run cases that have ALL specified tags (AND logic). Example: --tags geographic critical"
+        help="Run cases that have ALL specified tags (AND logic). Example: --tags valid spending"
     )
 
     parser.add_argument(
         "--cases",
         nargs="+",
-        help="Run specific cases by name. Example: --cases geographic_comparison city_location"
+        help="Run specific cases by name. Example: --cases spending_analysis financial_advice"
     )
 
     return parser.parse_args()
@@ -181,20 +182,20 @@ async def main() -> List[EvalResult]:
     # Run evaluations based on arguments
     if args.cases:
         # Run specific cases by name
-        results: List[EvalResult] = await run_unprocessable_entity_extraction_evals(
+        results: List[EvalResult] = await run_user_intent_validation_evals(
             llm_client,
             case_names=args.cases
         )
     elif args.tags:
         # Run cases with specified tags (AND logic)
-        results: List[EvalResult] = await run_unprocessable_entity_extraction_evals(
+        results: List[EvalResult] = await run_user_intent_validation_evals(
             llm_client,
             tags=args.tags,
             tags_match_all=True  # Use AND logic for multiple tags
         )
     else:
         # Run all evaluations
-        results: List[EvalResult] = await run_unprocessable_entity_extraction_evals(llm_client)
+        results: List[EvalResult] = await run_user_intent_validation_evals(llm_client)
 
     return results
 

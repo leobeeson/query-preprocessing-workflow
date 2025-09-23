@@ -103,6 +103,33 @@ class ResultWriter:
             if hasattr(r, 'llm_cost') and r.llm_cost
         )
 
+        # Calculate token statistics
+        total_input_tokens = sum(
+            r.input_tokens for r in results
+            if hasattr(r, 'input_tokens') and r.input_tokens
+        )
+
+        total_output_tokens = sum(
+            r.output_tokens for r in results
+            if hasattr(r, 'output_tokens') and r.output_tokens
+        )
+
+        # Calculate averages (only count cases that have token data)
+        cases_with_tokens = sum(
+            1 for r in results
+            if hasattr(r, 'input_tokens') and r.input_tokens
+        )
+
+        avg_input_tokens = (
+            round(total_input_tokens / cases_with_tokens, 2)
+            if cases_with_tokens > 0 else 0
+        )
+
+        avg_output_tokens = (
+            round(total_output_tokens / cases_with_tokens, 2)
+            if cases_with_tokens > 0 else 0
+        )
+
         # Build summary
         summary = {
             "agent": self.agent_name,
@@ -114,6 +141,10 @@ class ResultWriter:
             "total_duration_ms": total_duration_ms,
             "total_cost_usd": round(total_cost, 6),
             "average_cost_per_case": round(total_cost / total_cases, 6) if total_cases > 0 else 0,
+            "total_input_tokens": total_input_tokens,
+            "total_output_tokens": total_output_tokens,
+            "average_input_tokens_per_case": avg_input_tokens,
+            "average_output_tokens_per_case": avg_output_tokens,
         }
 
         # Add metadata if provided

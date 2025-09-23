@@ -8,7 +8,7 @@ import asyncio
 from typing import Optional, List, Dict, Any
 
 # Import evaluation cases at top level to trigger decorator registration
-import evals.cases.unprocessable_entity_extraction  # noqa: F401
+import evals.cases.category_normalisation  # noqa: F401
 
 from src.clients.llm_clients.llm_client_interface import LLMClientInterface
 from evals.core import EvalCase, EvalResult
@@ -17,19 +17,18 @@ from evals.runner import EvalRunner
 from evals.llm_client_config import get_llm_client_or_exit
 
 # Import agent and models
-from src.workflow_nodes.query_preprocessing.unprocessable_entity_extraction_agent import UnprocessableEntityExtractionAgent
-from src.models.base_models import QueryInput
-from src.models.entity_extraction_models import UnprocessableEntityExtractionOutput
+from src.workflow_nodes.query_preprocessing.category_normalisation_agent import CategoryNormalisationAgent
+from src.models.category_normalisation_models import CategoryNormalisationInput, CategoryNormalisationOutput
 
 
-async def run_unprocessable_entity_extraction_evals(
+async def run_category_normalisation_evals(
     llm_client: LLMClientInterface,
     case_names: Optional[List[str]] = None,
     tags: Optional[List[str]] = None,
     tags_match_all: bool = True
-) -> List[EvalResult]:
+):
     """
-    Run evaluation cases for UnprocessableEntityExtractionAgent.
+    Run evaluation cases for CategoryNormalisationAgent.
 
     Args:
         llm_client: The LLM client to use
@@ -42,9 +41,9 @@ async def run_unprocessable_entity_extraction_evals(
     """
     # Create registry and load cases
     registry = EvalRegistry.for_agent(
-        agent_class=UnprocessableEntityExtractionAgent,
-        input_type=QueryInput,
-        output_type=UnprocessableEntityExtractionOutput
+        agent_class=CategoryNormalisationAgent,
+        input_type=CategoryNormalisationInput,
+        output_type=CategoryNormalisationOutput
     )
 
     # Print registry summary
@@ -95,7 +94,7 @@ async def run_unprocessable_entity_extraction_evals(
 
     # Initialize runner with result saving enabled
     runner: EvalRunner = EvalRunner(
-        agent_class=UnprocessableEntityExtractionAgent,
+        agent_class=CategoryNormalisationAgent,
         llm_client=llm_client,
         save_results=True  # Enable saving results to disk
     )
@@ -132,39 +131,39 @@ async def run_unprocessable_entity_extraction_evals(
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description="Run evaluation cases for UnprocessableEntityExtractionAgent",
+        description="Run evaluation cases for CategoryNormalisationAgent",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Run all tests
-  python -m evals.tests.test_eval_decorated_unprocessable_entity_extraction
+  python -m evals.tests.test_eval_decorated_category_normalisation
 
   # Run tests with a single tag
-  python -m evals.tests.test_eval_decorated_unprocessable_entity_extraction --tags geographic
+  python -m evals.tests.test_eval_decorated_category_normalisation --tags tier3
 
   # Run tests that have ALL specified tags (AND logic)
-  python -m evals.tests.test_eval_decorated_unprocessable_entity_extraction --tags geographic critical
+  python -m evals.tests.test_eval_decorated_category_normalisation --tags tier3 transport
 
   # Run tests with specific case names
-  python -m evals.tests.test_eval_decorated_unprocessable_entity_extraction --cases geographic_comparison city_location
+  python -m evals.tests.test_eval_decorated_category_normalisation --cases tier3_petrol tier3_groceries_supermarket
 
 Available tags:
-  geographic, payment_method, person_recipient, transaction_channel,
-  product_service, financial_product, transaction_status, account,
-  complex, negative, edge-case, critical, non-critical, dev_cases
+  tier1, tier2, tier3, expenses, income, transfers, bills, eating_out,
+  entertainment, transport, shopping, wellness, groceries, utilities,
+  multiple, mixed, mixed_tiers, similar, dev_cases
         """
     )
 
     parser.add_argument(
         "--tags",
         nargs="+",
-        help="Run cases that have ALL specified tags (AND logic). Example: --tags geographic critical"
+        help="Run cases that have ALL specified tags (AND logic). Example: --tags tier3 transport"
     )
 
     parser.add_argument(
         "--cases",
         nargs="+",
-        help="Run specific cases by name. Example: --cases geographic_comparison city_location"
+        help="Run specific cases by name. Example: --cases tier3_petrol tier3_groceries_supermarket"
     )
 
     return parser.parse_args()
@@ -181,20 +180,20 @@ async def main() -> List[EvalResult]:
     # Run evaluations based on arguments
     if args.cases:
         # Run specific cases by name
-        results: List[EvalResult] = await run_unprocessable_entity_extraction_evals(
+        results: List[EvalResult] = await run_category_normalisation_evals(
             llm_client,
             case_names=args.cases
         )
     elif args.tags:
         # Run cases with specified tags (AND logic)
-        results: List[EvalResult] = await run_unprocessable_entity_extraction_evals(
+        results: List[EvalResult] = await run_category_normalisation_evals(
             llm_client,
             tags=args.tags,
             tags_match_all=True  # Use AND logic for multiple tags
         )
     else:
         # Run all evaluations
-        results: List[EvalResult] = await run_unprocessable_entity_extraction_evals(llm_client)
+        results: List[EvalResult] = await run_category_normalisation_evals(llm_client)
 
     return results
 

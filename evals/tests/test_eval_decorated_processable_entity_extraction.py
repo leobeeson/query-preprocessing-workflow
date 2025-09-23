@@ -7,9 +7,9 @@ import asyncio
 from typing import Any, Dict, Optional, List
 
 # Import evaluation cases at top level to trigger decorator registration
-from clients.llm_clients.llm_client_interface import LLMClientInterface
 import evals.cases.processable_entity_extraction  # noqa: F401
 
+from src.clients.llm_clients.llm_client_interface import LLMClientInterface
 from evals.core import EvalCase, EvalResult
 from evals.registry import EvalRegistry
 from evals.runner import EvalRunner
