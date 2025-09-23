@@ -215,6 +215,24 @@ EvalCase(
 | `Contains` | List has items | `Contains(values=["a", "b"])` | Required list elements |
 | `AllOf` | List has all items | `AllOf(values=["x", "y"])` | Complete set required |
 
+##### Case Sensitivity
+
+By default, all string comparisons in `Exact`, `Substring`, and `OneOf` validators are **case-insensitive**. This prevents false failures when the LLM outputs differ only in capitalization.
+
+```python
+# Default behavior (case-insensitive)
+Exact(value="Interest")  # Matches "Interest", "interest", "INTEREST"
+Substring(value="Work")  # Matches "Work-related", "work-related", "WORK-RELATED"
+OneOf(values=["USD", "EUR"])  # Matches "usd", "Usd", "EUR", "eur"
+
+# Opt-in case-sensitive comparison
+Exact(value="USD", case_sensitive=True)  # Only matches "USD" exactly
+Substring(value="API", case_sensitive=True)  # Case must match exactly
+OneOf(values=["GET", "POST"], case_sensitive=True)  # Exact case required
+```
+
+**Best Practice:** Use the default case-insensitive behavior unless the case is semantically significant (e.g., acronyms, proper nouns where case matters).
+
 #### Advanced Validators
 
 ##### ListMatches - Complex List Validation
@@ -424,6 +442,73 @@ python -m evals.tests.test_your_agent
 # evals/results/YourAgent/2025-09-17-15-30-00.jsonl
 # evals/results/YourAgent/2025-09-17-15-30-00_summary.json
 ```
+
+#### Tag-Based Filtering
+
+The evaluation framework supports tag-based filtering to run specific subsets of test cases. This is useful for:
+- Running only critical tests during development
+- Testing specific feature areas
+- Grouping related tests for focused debugging
+
+##### Using Tags with Command Line
+
+```bash
+# Run tests with a single tag
+python -m evals.tests.test_your_agent --tags critical
+
+# Run tests with multiple tags (AND logic - must have ALL specified tags)
+python -m evals.tests.test_your_agent --tags geographic critical
+
+# The framework will show filtered case counts:
+# "Running cases with ALL tags: ['geographic', 'critical'] (AND logic)"
+# "Filtered cases: 3 out of 50 total"
+```
+
+##### Common Tag Patterns
+
+```python
+# In your eval cases file
+@eval_case(
+    name="critical_extraction",
+    agent_class=YourAgent,
+    tags=["critical", "extraction", "core"]  # Multiple tags for flexible filtering
+)
+
+# Example tag categories:
+# - Priority: ["critical", "non-critical", "edge-case"]
+# - Feature: ["extraction", "validation", "transformation"]
+# - Domain: ["geographic", "financial", "temporal"]
+# - Development: ["dev_cases", "regression", "smoke"]
+```
+
+##### Programmatic Tag Filtering
+
+```python
+# In your test runner
+registry = EvalRegistry.for_agent(agent_class=YourAgent, ...)
+
+# Get cases with ANY of the specified tags (OR logic - default registry behavior)
+cases = registry.get_cases(tags=["critical", "core"])
+
+# For AND logic (cases must have ALL tags), filter manually:
+all_cases = registry.get_all_cases()
+filtered_cases = []
+for case in all_cases:
+    # Access metadata from registry
+    func = registry._functions.get(case.name)
+    if func:
+        metadata = getattr(func, "eval_metadata", {})
+        case_tags = metadata.get("tags", [])
+        if all(tag in case_tags for tag in ["geographic", "critical"]):
+            filtered_cases.append(case)
+```
+
+##### Best Practices for Tags
+
+1. **Use consistent tag naming**: Establish a convention across your test suite
+2. **Layer tags by concern**: Combine priority, feature, and domain tags
+3. **Document available tags**: List commonly used tags in your test runner's help text
+4. **Note on logic**: Command-line filtering uses AND logic (all tags required), while programmatic `registry.get_cases()` uses OR logic by default
 
 ### Step 5: Analyze Results
 

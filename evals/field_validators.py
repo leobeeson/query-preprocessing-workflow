@@ -14,11 +14,13 @@ class FieldValidator(BaseModel):
 class Exact(FieldValidator):
     """Field must exactly match this value."""
     value: Any
+    case_sensitive: bool = False
 
 
 class OneOf(FieldValidator):
     """Field must be one of these values."""
     values: List[Any]
+    case_sensitive: bool = False
 
 
 class AllOf(FieldValidator):
@@ -39,6 +41,7 @@ class Criteria(FieldValidator):
 class Substring(FieldValidator):
     """Field must contain this substring (for string fields)."""
     value: str
+    case_sensitive: bool = False
 
 
 class ListMatches(FieldValidator):

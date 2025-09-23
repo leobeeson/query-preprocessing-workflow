@@ -17,14 +17,19 @@ The six processable entity types (DO NOT EXTRACT THESE):
 
 You extract ALL OTHER entities that represent data we cannot query, including:
 * Geographic locations (countries, cities, regions)
-* Payment methods (credit card, debit card, cash)
+  NOTE: Business terms like "retailers", "shops", "stores" are NOT geographic entities
+* Currencies other than GBP (dollars, euros, yen) - extract ALL currency mentions except GBP/pounds/sterling
+* Granular payment methods not distinguished in transaction data (credit card vs debit card, contactless, Apple Pay, Google Pay, chip & PIN)
+  NOTE: Transaction types like direct debit and BACS are trackable. Extract only payment details that aren't tracked.
 * Person-to-person transfers (individual names like "John Smith", "my landlord", "my wife")
   NOTE: Organizations you pay (HMRC, councils, utilities) are merchants (processable)
 * Transaction channels (online, in-store, ATM)
-* Specific products or services (coffee, petrol, shoes)
+* Specific products or services (coffee drinks, petrol, shoes, haircuts, gym memberships)
+* Purchase intents or purposes that cannot be determined from transaction data (gifts, presents, work-related, business, personal use distinctions)
   NOTE: Compound category terms like "home repairs", "car maintenance" are categories (processable)
-* Financial products (mortgage, loan, interest) when referring to external products
-  NOTE: "mortgage" as a spending category is processable (expenses:bills.mortgage)
+* Financial products (loans, overdrafts, credit facilities, interest rates) - these are banking/credit products
+  NOTE: "mortgage" as a spending category is processable (expenses:bills.mortgage), but "mortgage loan" as a financial instrument is not
+  DISTINCTION: Financial products = banking/credit instruments (loans, overdrafts). Product/services = physical items or regular services (pizza, haircuts)
 * Transaction statuses (pending, declined, refunded)
 * Account types (savings, current, joint)
 * Any other entity not in the six processable types
@@ -137,6 +142,7 @@ Mark as CRITICAL (true) when:
 Mark as NON-CRITICAL (false) when:
 * Entity provides context but doesn't affect results
 * Entity is redundant (e.g., "in GBP" when all transactions are GBP)
+* Geographic references to the currency's home country (e.g., "UK" for GBP, "US" for USD) are redundant
 * Entity is mentioned incidentally
 * Entity is a preference rather than requirement
 * Entity is implied by all data (e.g., "NatWest" when all data is from NatWest)
@@ -441,6 +447,19 @@ When uncertain, default to critical (true).
 </response>
 </example>
 
+<example label="purchase intent as product_service">
+<query>Birthday gift purchases last month</query>
+<response>
+<entities>
+<entity>
+<type>product_service</type>
+<value>Birthday gift</value>
+<critical>true</critical>
+</entity>
+</entities>
+</response>
+</example>
+
 <example label="loan financial product">
 <query>My car loan payments</query>
 <response>
@@ -448,6 +467,42 @@ When uncertain, default to critical (true).
 <entity>
 <type>financial_product</type>
 <value>car loan</value>
+<critical>true</critical>
+</entity>
+</entities>
+</response>
+</example>
+
+<example label="financial product vs regular service">
+<query>Overdraft fees and gym membership costs</query>
+<response>
+<entities>
+<entity>
+<type>financial_product</type>
+<value>Overdraft</value>
+<critical>true</critical>
+</entity>
+<entity>
+<type>product_service</type>
+<value>gym membership</value>
+<critical>true</critical>
+</entity>
+</entities>
+</response>
+</example>
+
+<example label="student loan as financial product">
+<query>Student loan repayments and interest charges this month</query>
+<response>
+<entities>
+<entity>
+<type>financial_product</type>
+<value>Student loan</value>
+<critical>true</critical>
+</entity>
+<entity>
+<type>financial_product</type>
+<value>interest charges</value>
 <critical>true</critical>
 </entity>
 </entities>
@@ -545,6 +600,63 @@ When uncertain, default to critical (true).
 </response>
 </example>
 
+<example label="gift as purchase intent">
+<query>Christmas present shopping expenses</query>
+<response>
+<entities>
+<entity>
+<type>product_service</type>
+<value>Christmas present</value>
+<critical>true</critical>
+</entity>
+</entities>
+</response>
+</example>
+
+<example label="interest on credit">
+<query>Interest charges on my credit card</query>
+<response>
+<entities>
+<entity>
+<type>financial_product</type>
+<value>Interest charges</value>
+<critical>true</critical>
+</entity>
+<entity>
+<type>financial_product</type>
+<value>credit card</value>
+<critical>true</critical>
+</entity>
+</entities>
+</response>
+</example>
+
+<example label="business expense purpose">
+<query>Business purchases at retailers</query>
+<response>
+<entities>
+<entity>
+<type>expense_purpose</type>
+<value>Business purchases</value>
+<critical>true</critical>
+</entity>
+</entities>
+</response>
+</example>
+
+<example label="personal expense purpose">
+<query>Personal-related costs last month</query>
+<response>
+<entities>
+<entity>
+<type>expense_purpose</type>
+<value>Personal-related</value>
+<critical>true</critical>
+</entity>
+</entities>
+</response>
+</example>
+
 <example label="interest rate">
 <query>Transactions with high interest rates</query>
 <response>
@@ -572,12 +684,30 @@ When uncertain, default to critical (true).
 </example>
 
 <example label="dynamic type for currency">
-<query>Transactions in euros last month</query>
+<query>Transactions in euros or dollars last month</query>
 <response>
 <entities>
 <entity>
 <type>currency</type>
 <value>euros</value>
+<critical>true</critical>
+</entity>
+<entity>
+<type>currency</type>
+<value>dollars</value>
+<critical>true</critical>
+</entity>
+</entities>
+</response>
+</example>
+
+<example label="single foreign currency">
+<query>Spending in yen this year</query>
+<response>
+<entities>
+<entity>
+<type>currency</type>
+<value>yen</value>
 <critical>true</critical>
 </entity>
 </entities>
@@ -620,7 +750,7 @@ When uncertain, default to critical (true).
 <critical>true</critical>
 </entity>
 <entity>
-<type>currency_reference</type>
+<type>currency</type>
 <value>pounds</value>
 <critical>false</critical>
 </entity>
@@ -690,16 +820,18 @@ Extract all unprocessable entities (anything NOT temporal, category, merchant, a
 </immediate_task>
 
 <extraction_checklist>
-1. Geographic entities: Look for countries, cities, regions like "UK", "London", "abroad"
-2. Payment method entities: Look for "credit card", "debit card", "cash", "contactless"
-3. Person/recipient entities: Look for individual people like "John Smith", "my wife", "landlord"
+1. Currencies: Look for "dollars", "euros", "yen" or ANY currency except GBP/pounds/sterling
+2. Geographic entities: Look for countries, cities, regions like "UK", "London", "abroad"
+   (NOT business terms like "retailers", "shops", "stores" - those are NOT geographic)
+3. Payment method entities: Look for "credit card", "debit card", "cash", "contactless"
+4. Person/recipient entities: Look for individual people like "John Smith", "my wife", "landlord"
    (NOT organizations like HMRC, councils, utilities - those are merchants)
-4. Transaction channel entities: Look for "online", "in-store", "ATM", "mobile app"
-5. Product/service entities: Look for specific items like "coffee", "shoes", "petrol"
-6. Financial product entities: Look for "mortgage", "loan", "interest rate"
-7. Transaction status entities: Look for "pending", "declined", "refunded"
-8. Account entities: Look for "savings account", "joint account"
-9. Other entities: Generate descriptive types for anything else not processable
+5. Transaction channel entities: Look for "online", "in-store", "ATM", "mobile app"
+6. Product/service entities: Look for specific items like "coffee", "shoes", "petrol"
+7. Financial product entities: Look for "mortgage", "loan", "interest rate"
+8. Transaction status entities: Look for "pending", "declined", "refunded"
+9. Account entities: Look for "savings account", "joint account"
+10. Other entities: Generate descriptive types for anything else not processable
 </extraction_checklist>
 
 <criticality_checklist>

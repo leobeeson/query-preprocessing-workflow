@@ -4,11 +4,13 @@ Runner for evaluation cases using the decorator pattern.
 """
 
 import asyncio
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 
 # Import evaluation cases at top level to trigger decorator registration
+from clients.llm_clients.llm_client_interface import LLMClientInterface
 import evals.cases.processable_entity_extraction  # noqa: F401
 
+from evals.core import EvalCase, EvalResult
 from evals.registry import EvalRegistry
 from evals.runner import EvalRunner
 from evals.llm_client_config import get_llm_client_or_exit
@@ -20,10 +22,10 @@ from src.models.entity_extraction_models import ProcessableEntityExtractionOutpu
 
 
 async def run_processable_entity_extraction_evals(
-    llm_client,
+    llm_client: LLMClientInterface,
     case_names: Optional[List[str]] = None,
     tags: Optional[List[str]] = None
-):
+) -> List[EvalResult]:
     """
     Run evaluation cases for ProcessableEntityExtractionAgent.
 
@@ -43,7 +45,7 @@ async def run_processable_entity_extraction_evals(
     )
 
     # Print registry summary
-    summary = registry.summary()
+    summary: Dict[str, Any] = registry.summary()
     print(f"\n{'='*60}")
     print(f"Evaluation Registry Summary")
     print(f"Agent: {summary['agent']}")
@@ -53,13 +55,13 @@ async def run_processable_entity_extraction_evals(
 
     # Get cases to run
     if case_names:
-        cases = registry.get_cases(names=case_names)
+        cases: List[EvalCase] = registry.get_cases(names=case_names)
         print(f"Running specific cases: {case_names}")
     elif tags:
-        cases = registry.get_cases(tags=tags)
+        cases: List[EvalCase] = registry.get_cases(tags=tags)
         print(f"Running cases with tags: {tags}")
     else:
-        cases = registry.get_all_cases()
+        cases: List[EvalCase] = registry.get_all_cases()
         print(f"Running all {len(cases)} cases")
 
     if not cases:
@@ -74,15 +76,15 @@ async def run_processable_entity_extraction_evals(
     )
 
     # Run evaluations with smaller batch size to avoid rate limits
-    results = await runner.run_batch(cases, parallel=True, batch_size=3)
+    results: List[EvalResult] = await runner.run_batch(cases, parallel=True, batch_size=3)
 
     # Print results summary
-    passed = sum(1 for r in results if r.passed)
-    failed = sum(1 for r in results if not r.passed)
+    passed: int = sum(1 for r in results if r.passed)
+    failed: int = sum(1 for r in results if not r.passed)
 
     # Calculate total costs
-    total_cost = sum(r.llm_cost for r in results if r.llm_cost)
-    avg_cost = total_cost / len(results) if results else 0
+    total_cost: float = sum(r.llm_cost for r in results if r.llm_cost)
+    avg_cost: float = total_cost / len(results) if results else 0
 
     print(f"\n{'='*60}")
     print(f"Evaluation Results")
@@ -105,10 +107,10 @@ async def run_processable_entity_extraction_evals(
 async def main():
     """Main entry point."""
     # Get LLM client from centralized config
-    llm_client = get_llm_client_or_exit()
+    llm_client: LLMClientInterface = get_llm_client_or_exit()
 
     # Run all evaluations
-    results = await run_processable_entity_extraction_evals(llm_client)
+    results: List[EvalResult] = await run_processable_entity_extraction_evals(llm_client)
 
     # Example: Run only specific tags
     # results = await run_processable_entity_extraction_evals(

@@ -37,17 +37,9 @@ class ProcessableEntityExtractionOutput(BaseModel):
 
 class UnprocessableEntity(BaseModel):
     """Model for an unprocessable entity extracted from user query"""
-    type: Literal[
-        "geographic", 
-        "payment_method", 
-        "person_recipient",
-        "transaction_channel",
-        "product_service",
-        "bank_reference",
-        "financial_product",
-        "transaction_status",
-        "account"
-    ] = Field(description="The type of unprocessable entity")
+    type: str = Field(
+        description="The type of unprocessable entity - can be standard types (geographic, payment_method, etc.) or dynamic 1-3 word descriptive types"
+    )
     value: str = Field(description="The exact text value from the query")
     critical: bool = Field(
         description="Whether this entity makes the query unprocessable"

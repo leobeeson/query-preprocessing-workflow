@@ -18,7 +18,7 @@ from src.models.entity_extraction_models import ProcessableEntityExtractionOutpu
     description="Did I receive any cashbacks or refunds from groceries or Amazon in 2023 and 2024?",
     tags=["predicted_user_intent"]
 )
-def eval_predicted_intent_001():
+def eval_predicted_intent_001(): #DONE
     return {
         "input": QueryInput(query="Did I receive any cashbacks or refunds from groceries or Amazon in 2023 and 2024?"),
         "expected": ProcessableEntityExtractionOutput(
@@ -46,11 +46,12 @@ def eval_predicted_intent_001():
     description="What was the day in 2024 when my combined spending on groceries and Amazon was the highest?",
     tags=["predicted_user_intent"]
 )
-def eval_predicted_intent_002():
+def eval_predicted_intent_002(): #DONE
     return {
         "input": QueryInput(query="What was the day in 2024 when my combined spending on groceries and Amazon was the highest?"),
         "expected": ProcessableEntityExtractionOutput(
             entities=[
+                Entity(type="temporal", value="day"),
                 Entity(type="temporal", value="2024"),
                 Entity(type="category", value="groceries"),
                 Entity(type="merchant", value="Amazon")
@@ -72,7 +73,7 @@ def eval_predicted_intent_002():
     description="Which restaurants did I spend $150 on dining out last month?",
     tags=["predicted_user_intent"]
 )
-def eval_predicted_intent_003():
+def eval_predicted_intent_003(): #DONE
     return {
         "input": QueryInput(query="Which restaurants did I spend $150 on dining out last month?"),
         "expected": ProcessableEntityExtractionOutput(
@@ -100,7 +101,7 @@ def eval_predicted_intent_003():
     description="What was my total spending on groceries and dining out in the last year?",
     tags=["predicted_user_intent"]
 )
-def eval_predicted_intent_004():
+def eval_predicted_intent_004(): #DONE
     return {
         "input": QueryInput(query="What was my total spending on groceries and dining out in the last year?"),
         "expected": ProcessableEntityExtractionOutput(
@@ -126,7 +127,7 @@ def eval_predicted_intent_004():
     description="What is my total spending in the last year?",
     tags=["predicted_user_intent"]
 )
-def eval_predicted_intent_005():
+def eval_predicted_intent_005(): #DONE
     return {
         "input": QueryInput(query="What is my total spending in the last year?"),
         "expected": ProcessableEntityExtractionOutput(
@@ -148,7 +149,7 @@ def eval_predicted_intent_005():
     description="my payments to Amzn past 3 months?",
     tags=["predicted_user_intent"]
 )
-def eval_predicted_intent_006():
+def eval_predicted_intent_006(): #DONE
     return {
         "input": QueryInput(query="my payments to Amzn past 3 months?"),
         "expected": ProcessableEntityExtractionOutput(
@@ -172,7 +173,7 @@ def eval_predicted_intent_006():
     description="Where did I spend cash in the Entertainment category last month?",
     tags=["predicted_user_intent"]
 )
-def eval_predicted_intent_007():
+def eval_predicted_intent_007(): #DONE #REQ: Raise with CORA team.
     return {
         "input": QueryInput(query="Where did I spend cash in the Entertainment category last month?"),
         "expected": ProcessableEntityExtractionOutput(
@@ -196,7 +197,7 @@ def eval_predicted_intent_007():
     description="Was RetailMart the store where I spent the most last month?",
     tags=["predicted_user_intent"]
 )
-def eval_predicted_intent_008():
+def eval_predicted_intent_008(): #DONE
     return {
         "input": QueryInput(query="Was RetailMart the store where I spent the most last month?"),
         "expected": ProcessableEntityExtractionOutput(

@@ -110,13 +110,27 @@ class Evaluator:
 
             # Apply appropriate validation
             if isinstance(validator, Exact):
-                if actual_value != validator.value:
+                # Handle case-insensitive comparison for strings
+                if hasattr(validator, 'case_sensitive') and not validator.case_sensitive and isinstance(actual_value, str) and isinstance(validator.value, str):
+                    match = actual_value.lower() == validator.value.lower()
+                else:
+                    match = actual_value == validator.value
+
+                if not match:
                     failures.append(
                         f"Field '{field_name}': expected {validator.value}, got {actual_value}"
                     )
 
             elif isinstance(validator, OneOf):
-                if actual_value not in validator.values:
+                # Handle case-insensitive comparison for strings
+                if hasattr(validator, 'case_sensitive') and not validator.case_sensitive and isinstance(actual_value, str):
+                    # Convert all string values to lowercase for comparison
+                    lower_values = [v.lower() if isinstance(v, str) else v for v in validator.values]
+                    match = actual_value.lower() in lower_values
+                else:
+                    match = actual_value in validator.values
+
+                if not match:
                     failures.append(
                         f"Field '{field_name}': expected one of {validator.values}, got {actual_value}"
                     )
@@ -155,10 +169,17 @@ class Evaluator:
                     failures.append(
                         f"Field '{field_name}': expected string for Substring validation, got {type(actual_value)}"
                     )
-                elif validator.value not in actual_value:
-                    failures.append(
-                        f"Field '{field_name}': expected to contain '{validator.value}', got '{actual_value}'"
-                    )
+                else:
+                    # Handle case-insensitive comparison
+                    if hasattr(validator, 'case_sensitive') and not validator.case_sensitive:
+                        match = validator.value.lower() in actual_value.lower()
+                    else:
+                        match = validator.value in actual_value
+
+                    if not match:
+                        failures.append(
+                            f"Field '{field_name}': expected to contain '{validator.value}', got '{actual_value}'"
+                        )
 
             elif isinstance(validator, ListMatches):
                 if not isinstance(actual_value, list):
@@ -220,14 +241,27 @@ class Evaluator:
                     field_valid = False
 
                     if isinstance(validator, Exact):
-                        field_valid = actual_field_value == validator.value
+                        # Handle case-insensitive comparison for strings
+                        if hasattr(validator, 'case_sensitive') and not validator.case_sensitive and isinstance(actual_field_value, str) and isinstance(validator.value, str):
+                            field_valid = actual_field_value.lower() == validator.value.lower()
+                        else:
+                            field_valid = actual_field_value == validator.value
                     elif isinstance(validator, Substring):
-                        field_valid = (
-                            isinstance(actual_field_value, str) and
-                            validator.value in actual_field_value
-                        )
+                        if isinstance(actual_field_value, str):
+                            # Handle case-insensitive comparison
+                            if hasattr(validator, 'case_sensitive') and not validator.case_sensitive:
+                                field_valid = validator.value.lower() in actual_field_value.lower()
+                            else:
+                                field_valid = validator.value in actual_field_value
+                        else:
+                            field_valid = False
                     elif isinstance(validator, OneOf):
-                        field_valid = actual_field_value in validator.values
+                        # Handle case-insensitive comparison for strings
+                        if hasattr(validator, 'case_sensitive') and not validator.case_sensitive and isinstance(actual_field_value, str):
+                            lower_values = [v.lower() if isinstance(v, str) else v for v in validator.values]
+                            field_valid = actual_field_value.lower() in lower_values
+                        else:
+                            field_valid = actual_field_value in validator.values
                     # Add more validator types as needed
 
                     if not field_valid:
