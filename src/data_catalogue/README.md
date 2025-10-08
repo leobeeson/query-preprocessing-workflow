@@ -1,33 +1,122 @@
-# Data Catalogue: latest_dynamo_combined.csv
+# Data Catalogue: Transaction and Budget Data
 
 ## Overview
-This data catalogue documents a NatWest banking transaction dataset containing 119,984 customer transactions from 22 accounts spanning 2023-2025. The data has been enriched with merchant identification, spending categorization, and carbon footprint calculations through the MIMO enrichment system.
+This data catalogue documents `mii` synthetic test data containing:
+- **Transaction data**: 119,984 customer transactions from 22 accounts spanning 2023-2025
+- **Budget data**: Customer-defined spending budgets by category
+
+The transaction data has been enriched with merchant identification, spending categorization, and carbon footprint calculations through the MIMO enrichment system.
 
 ### Purpose
 This catalogue provides comprehensive field-level documentation to support:
 - Natural language-to-SQL semantic layer development
 - Transaction analysis and reporting
+- Budget tracking and overspending detection
 - Data integration and ETL processes
 - Query optimization and indexing strategies
 
 ### What's Inside
-- **Detailed field descriptions**: Purpose, characteristics, usage patterns, and semantic layer suitability for each of 22 fields
-- **Categorical value breakdowns**: Explanations of unique values for low-cardinality fields (see `results/categorical_values.md` for complete lists)
+- **Detailed field descriptions**: Purpose, characteristics, usage patterns, and semantic layer suitability for each field
+- **Budget system documentation**: How budgets work and how to detect budget exceedances
 - **Statistical profiling**: Cardinality analysis, null percentages, and data type information
 - **Semantic classification**: Field types (categorical, continuous, temporal, identifiers)
 - **Data quality insights**: Coverage, completeness, and analytical limitations
 
-## File Location
-`ai_docs/context/docs/query_preprocessing/latest_dynamo_combined.csv`
+## Data Sources
 
-## Dataset Statistics
+### Transaction Data
+- **DynamoDB Table**: `aiincd2-transactions-enriched-table`
+- **S3 Backup Location**: `s3://649669169886-eu-west-1-prophet-aiincd2-emr-hive-metastore/backup_test/latest_dynamo_combined.csv`
 - **Total Records**: 119,984 transactions
 - **Date Range**: 2023-2025
-- **Columns**: 22 fields
+- **Fields**: 23 fields (22 business fields + balance)
 
-## Column Definitions
+### Budget Data
+- **DynamoDB Table**: `aiinc2-budgets-config-table`
+- **Records**: Customer budgets by category
+- **Key Fields**: customer_id, category_id, amount, deleted, last_modified_timestamp
 
-Detailed descriptions of each field in the transaction dataset. For complete lists of categorical values, see `src/data_catalogue/results/categorical_values.md`.
+### Reference Data
+- **Category Mapping**: Maps category UUIDs to human-readable category names with tier hierarchy (tier_1, tier_2, tier_3)
+- **Additional Master Data**: Various reference tables shared by colleagues (locations not specified in this document)
+
+## Dataset Statistics
+
+### Transaction Dataset Summary
+- **Total Transactions**: 119,984
+- **Unique Accounts**: 22
+- **Date Coverage**: 2023-2025 (732 unique dates)
+- **Transaction Types**: 2 (spending, income)
+- **Merchant Categories**: 45 unique category UUIDs
+- **Merchant Brands**: 321 unique display names
+
+### Budget Dataset Summary
+- **Budget Records**: Customer-defined budgets per category
+- **Budget Application**: Fixed threshold amounts applied monthly
+- **Active Budgets**: Filtered by deleted = false
+
+## Field Classification Summary
+
+The following table provides a high-level classification of all transaction fields by their semantic type and usage:
+
+| Column | Field Type | Rationale |
+|--------|-----------|-----------|
+| transaction_type | categorical | Two values: spending/income. Used for filtering and grouping transactions. |
+| spending_type | categorical | Two values: day-to-day/regular. Used for categorizing spending behavior. |
+| record_creation_timestamp | temporal | Batch processing timestamp. Only 2 values suggest batch loading times. |
+| transaction_status | categorical | Single value: booked. Status enumeration (though currently only one state). |
+| proprietary_bank_transaction_code | categorical | 13 transaction type codes (POS, DPC, D/D, etc.). Used for transaction classification. |
+| mimo_account_id | identifier_entity | 22 unique hashed account identifiers. Identifies customers/accounts in MIMO system. |
+| prophet_account_id | identifier_entity | 22 unique account identifiers. Identifies customers/accounts in Prophet system. |
+| agrmnt_id | identifier_entity | 22 unique agreement IDs. Identifies customer agreements/accounts. |
+| category_id | categorical | 45 category UUIDs representing transaction categories. Primary categorical dimension for analysis. |
+| mcc | categorical | 101 Merchant Category Codes. Standard industry categorization system. |
+| recurring_payment_type | categorical | Type of recurring payment (SUBSCRIPTION). Sparse field (99.23% null) only for recurring transactions. |
+| merchant_brand_code | categorical | 188 internal merchant brand codes. Used for merchant identification and grouping. |
+| display_narrative | categorical | 321 merchant brand names. User-facing merchant categorization. |
+| clean_narrative | categorical | 379 cleaned merchant descriptions. Standardized merchant names with location. |
+| mimo_match_id | identifier_enrichment | 384 matching identifiers. Technical key for transaction matching/enrichment logic. |
+| transaction_booking_timestamp | temporal | 732 unique dates (2023-2025). Transaction booking date for temporal analysis. |
+| recurring_payment_id | identifier_entity | 29 recurring payment IDs. Identifies unique recurring payment arrangements. Sparse (99.23% null). |
+| amount | continuous | 15,180 unique transaction amounts. Decimal values representing money transferred. |
+| balance | continuous | Account balance after transaction applied. Critical for balance-based queries and overdraft detection. |
+| total_kg_co2e | continuous | 45,085 unique CO2 values. Decimal measurements of carbon footprint. |
+| mimo_transaction_id | identifier_transaction | 100% unique. MIMO system transaction identifier (MD5 hash). |
+| prophet_transaction_id | identifier_transaction | 100% unique. Prophet system transaction identifier. |
+| external_transaction_id | identifier_transaction | 100% unique. External system transaction identifier. |
+
+## Statistical Profile
+
+The following table provides detailed statistical characteristics for each field:
+
+| Column | Data Type | Unique Count | Non-Null Count | Null Count | Total Count | Cardinality % | Null % | Cardinality Profile | Sample Values |
+|--------|-----------|--------------|----------------|------------|-------------|---------------|--------|---------------------|---------------|
+| transaction_type | object | 2 | 119,984 | 0 | 119,984 | 0.0 | 0.0 | low_cardinality | "spending", "income", "spending", "income", "income" |
+| spending_type | object | 2 | 119,984 | 0 | 119,984 | 0.0 | 0.0 | low_cardinality | "day-to-day", "regular", "regular", "day-to-day", "day-to-day" |
+| record_creation_timestamp | object | 2 | 119,984 | 0 | 119,984 | 0.0 | 0.0 | low_cardinality | "2025-08-06T14:29:30.000", "2025-08-06T14:29:30.000", "2025-08-20T13:39:20.000" |
+| transaction_status | object | 1 | 119,984 | 0 | 119,984 | 0.0 | 0.0 | low_cardinality | "booked", "booked", "booked", "booked", "booked" |
+| proprietary_bank_transaction_code | object | 13 | 119,984 | 0 | 119,984 | 0.01 | 0.0 | low_cardinality | "POS", "DPC", "D/D", "BAC", "CHP" |
+| mimo_account_id | object | 22 | 119,984 | 0 | 119,984 | 0.02 | 0.0 | low_cardinality | "693733aeb89df94e1aeabec9b4ed50ad", "39e3a030ed0207eb6febd62a74933e61" |
+| prophet_account_id | object | 22 | 119,984 | 0 | 119,984 | 0.02 | 0.0 | low_cardinality | "560000_10000013", "560000_10000011", "560000_10000000" |
+| agrmnt_id | int64 | 22 | 119,984 | 0 | 119,984 | 0.02 | 0.0 | low_cardinality | "5560000012", "5560000010", "5560000000", "5560000000", "5560000019" |
+| category_id | object | 45 | 119,984 | 0 | 119,984 | 0.04 | 0.0 | low_cardinality | "d6a42dad-0e00-336d-08dd-a5450768a1cc", "d49120d2-8be9-17ad-c494-521779c207f3" |
+| mcc | int64 | 101 | 119,984 | 0 | 119,984 | 0.08 | 0.0 | low_cardinality | "5948", "20033", "5261", "20001", "9399" |
+| recurring_payment_type | object | 1 | 920 | 119,064 | 119,984 | 0.11 | 99.23 | sparse | "SUBSCRIPTION", "SUBSCRIPTION", "SUBSCRIPTION" |
+| merchant_brand_code | float64 | 188 | 100,200 | 19,784 | 119,984 | 0.19 | 16.49 | low_cardinality | "200581.0", "211172.0", "278.0", "85362.0", "307.0" |
+| display_narrative | object | 321 | 119,984 | 0 | 119,984 | 0.27 | 0.0 | low_cardinality | "Lego", "B T GB", "Dobbies", "DMC11 HBOS RETAIL TRX", "Edinburgh Council" |
+| clean_narrative | object | 379 | 119,984 | 0 | 119,984 | 0.32 | 0.0 | low_cardinality | "LEGO STORE GLASGOWGLASGOW GB", "B T GB*", "DOBBIES LISBURN GB" |
+| mimo_match_id | object | 384 | 119,984 | 0 | 119,984 | 0.32 | 0.0 | low_cardinality | "35365fb4bc88ead627e9ab7b4f67ba4c", "ee7ba0c6467efa7cd2b48989f6483231" |
+| transaction_booking_timestamp | object | 732 | 119,984 | 0 | 119,984 | 0.61 | 0.0 | low_cardinality | "2024-06-24", "2024-04-25", "2023-11-30", "2024-11-09", "2023-08-13" |
+| recurring_payment_id | object | 29 | 920 | 119,064 | 119,984 | 3.15 | 99.23 | sparse | "292_292", "294_294", "5_5", "292_292", "121_121" |
+| amount | float64 | 15,180 | 119,984 | 0 | 119,984 | 12.65 | 0.0 | high_cardinality | "-50.63", "-54.5", "-112.12", "-82.78", "-83.62" |
+| total_kg_co2e | float64 | 45,085 | 104,047 | 15,937 | 119,984 | 43.33 | 13.28 | high_cardinality | "16.947", "9.508", "12.977", "11.068", "8.514" |
+| mimo_transaction_id | object | 119,984 | 119,984 | 0 | 119,984 | 100.0 | 0.0 | unique | "c9ff7659bef87a88b26ec83ec8a08584", "4f799614b54f1fb26e6f8fa1cf51da09" |
+| prophet_transaction_id | int64 | 119,984 | 119,984 | 0 | 119,984 | 100.0 | 0.0 | unique | "89710219102733", "79106734579222", "39781224025152" |
+| external_transaction_id | int64 | 119,984 | 119,984 | 0 | 119,984 | 100.0 | 0.0 | unique | "10008594066050345", "10019032812627930", "10019738339627134" |
+
+## Detailed Field Descriptions
+
+This section provides comprehensive documentation for each field in the transaction dataset.
 
 ### Transaction Identifiers
 
@@ -99,6 +188,20 @@ Detailed descriptions of each field in the transaction dataset. For complete lis
 - **Usage**: Primary financial metric for aggregations, averages, totals
 - **Examples**: "-50.63" (spending), "8757.24" (income)
 - **Semantic Layer**: Essential for "sum of spending", "average transaction", "total income" queries
+
+**`balance`** (Decimal, continuous)
+- **Purpose**: Account balance after this transaction has been applied
+- **Characteristics**: Running balance following each transaction
+- **Usage**: Critical for balance-based queries:
+  - **Current balance**: Get most recent transaction's balance field
+  - **Historical balance**: Filter to specific date, get last transaction's balance
+  - **Overdraft detection**: WHERE balance < 0 identifies overdrawn periods
+  - **Threshold monitoring**: Track when balance crosses thresholds (e.g., < £2000)
+  - **Balance trends**: Analyze balance patterns over time
+  - **Correlation analysis**: Relate balance levels to spending patterns
+- **Format**: Decimal value representing post-transaction account balance
+- **Semantic Layer**: Enables "current balance", "was I overdrawn", "balance at end of month" queries
+- **Note**: Each transaction includes post-transaction balance, eliminating need for balance recalculation
 
 **`total_kg_co2e`** (Decimal, continuous)
 - **Purpose**: Estimated carbon footprint of the transaction in kilograms of CO2 equivalent
@@ -254,6 +357,142 @@ When building a natural language-to-SQL interface, the following fields are most
 - **`record_creation_timestamp`**: ETL metadata, not business data
 - **`recurring_payment_type`**: Too sparse (99.23% null)
 - **`recurring_payment_id`**: Too sparse, technical identifier
+
+## Budget System
+
+### Overview
+The budget system allows customers to set spending limits by category. Budget data is stored separately from transaction data and linked via `category_id`.
+
+**File Location**: `ai_docs/context/docs/query_preprocessing/budgets.csv`
+
+### Budget Fields
+
+**`customer_id`** (String)
+- **Purpose**: Links budget to specific customer
+- **Usage**: Requires mapping to transaction account identifiers (mimo_account_id, prophet_account_id, agrmnt_id)
+- **Note**: Customer-to-account mapping table exists for joining transaction and budget data
+
+**`budget_id`** (String)
+- **Purpose**: Unique identifier for each budget entry
+- **Format**: Composite format "{customer_id}-{category_id}"
+- **Example**: "3701555829-e63f7849-c0c0-012e-440e-3d0bc2c8ea94"
+
+**`category_id`** (UUID)
+- **Purpose**: Links budget to spending category (matches transaction category_id)
+- **Format**: UUID (e.g., "e63f7849-c0c0-012e-440e-3d0bc2c8ea94" for Groceries)
+- **Usage**: Join key between budgets and transactions - filter transactions by category_id to calculate spending against budget
+
+**`amount`** (Decimal)
+- **Purpose**: Budget threshold amount
+- **Semantics**: Fixed spending limit that applies on an ongoing basis (typically monthly)
+- **Usage**: Compare aggregated spending to this threshold to detect budget exceedances
+- **Examples**: "80" (£80 groceries budget), "100" (£100 entertainment budget)
+
+**`deleted`** (Boolean)
+- **Purpose**: Indicates if budget is active or has been deleted
+- **Values**: "true" (deleted/inactive), "false" (active)
+- **Usage**: Filter by deleted = false to get only active budgets
+
+**`description`** (String)
+- **Purpose**: Human-readable description of budget category
+- **Format**: Category hierarchy path (e.g., "expenses:groceries", "expenses:eating-out")
+- **Examples**: "expenses:groceries", "expenses:entertainment", "transfers:other"
+
+**`title`** (String)
+- **Purpose**: Display title for budget (typically same as description)
+- **Examples**: "expenses:groceries", "expenses:wellness"
+
+**`last_modified_timestamp`** (Timestamp ISO 8601)
+- **Purpose**: When budget was last modified or created
+- **Format**: ISO 8601 with millisecond precision (e.g., "2025-08-14T11:57:58.917")
+- **Usage**: Determines when budget became active - use to check if budget existed during specific time periods
+
+**`record_creation_timestamp`** (Timestamp ISO 8601)
+- **Purpose**: When budget record was originally created
+- **Format**: ISO 8601 with millisecond precision
+- **Usage**: Audit trail for budget creation
+
+### How Budgets Work
+
+**Budget Semantics**:
+- Budgets are **fixed threshold amounts**, not time-bound totals
+- They apply on an **ongoing basis** (typically monthly periods)
+- When a budget is set at £80 for groceries, this means the user intends to limit grocery spending to £80 per month
+
+**Detecting Budget Exceedances**:
+
+To determine if a user exceeded their budget:
+
+1. **Join Data**:
+   - Transactions → account_id → customer_id (via mapping table) → budgets
+   - Join on `category_id` to match transaction category with budget category
+
+2. **Filter Active Budgets**:
+   - WHERE deleted = false
+   - Check last_modified_timestamp to ensure budget was active during period being analyzed
+
+3. **Aggregate Spending**:
+   - Group transactions by time period (typically monthly)
+   - SUM(ABS(amount)) for transactions matching budget category_id
+   - Filter by transaction_type = 'spending' if needed
+
+4. **Compare to Threshold**:
+   - For each time period, compare aggregated spending to budget.amount
+   - If period_spending > budget.amount, budget was exceeded in that period
+
+5. **Count Exceedances**:
+   - COUNT periods where spending exceeded budget threshold
+   - Useful for queries like "How many times did I exceed my grocery budget last year?"
+
+**Example Query Logic** (Groceries budget for 2024):
+```
+1. Get customer's grocery budget:
+   - category_id = e63f7849-c0c0-012e-440e-3d0bc2c8ea94 (Groceries)
+   - deleted = false
+   - budget.amount = £80
+
+2. Calculate monthly grocery spending for 2024:
+   - Filter transactions: category_id = groceries, year = 2024
+   - GROUP BY MONTH(transaction_booking_timestamp)
+   - SUM(ABS(amount)) per month
+
+3. Compare each month:
+   - January: £95 > £80 ✓ Exceeded
+   - February: £72 < £80 ✗ Within budget
+   - March: £88 > £80 ✓ Exceeded
+   - ...
+
+4. Result: "You exceeded your grocery budget 2 times in Q1 2024"
+```
+
+### Budget Categories Available
+
+Common budget categories found in the data:
+- **expenses:groceries** (e63f7849-c0c0-012e-440e-3d0bc2c8ea94)
+- **expenses:eating-out** (ad2b8c89-ca33-1d71-04a8-84d087ae76b1)
+- **expenses:entertainment** (2b01b420-7e0e-bcee-fbf9-cc79dfd2a5e4)
+- **expenses:transport** (0dd00427-7f5b-bbff-d7c5-f65743115d73)
+- **expenses:shopping** (2d997971-dc47-0bfa-c951-8f34630b910d)
+- **expenses:home** (4e97a163-6aed-401e-7ab4-cde2c81a0f52)
+- **expenses:wellness** (52974940-22bb-5880-1b55-af7070bb804b)
+- **expenses:bills** (7186ed64-50c3-96c1-85d8-e6af2b21407c)
+- **expenses:misc** (8c983c86-5b8a-19f9-9318-00620a863b5f)
+- **transfers:other** (d3404628-3070-8ad8-5fb6-d742ab0f3563)
+
+See `mapping_table_unique_categories.csv` for complete category hierarchy with tier 1, tier 2, tier 3 breakdowns.
+
+### Semantic Layer Usage
+
+Budget-related queries that can be processed:
+- "Did I exceed my [category] budget [time period]?" - Compare aggregated spending to budget threshold
+- "How many times did I exceed my budget last year?" - Count periods where spending > budget.amount
+- "How much am I over/under budget this month?" - Calculate difference between actual spending and budget.amount
+- "What's my budget for [category]?" - Look up budget.amount for specified category
+- "Which categories am I over budget on?" - Find all categories where spending > budget for current period
+
+**Required Data Joins**:
+- Customer-to-account mapping (to link transaction account IDs to budget customer_id)
+- Category mapping (for human-readable category names in queries)
 
 ## Field Classification
 
