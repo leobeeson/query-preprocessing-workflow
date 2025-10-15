@@ -101,12 +101,25 @@ class Evaluator:
 
         # Validate each field with specified rules
         for field_name, validator in field_validations.items():
-            # Check field exists
-            if field_name not in actual_dict:
-                failures.append(f"Field '{field_name}' not found in output")
-                continue
-
-            actual_value = actual_dict[field_name]
+            # Support dot notation for nested fields (e.g., "sql_operations.aggregations")
+            if '.' in field_name:
+                parts = field_name.split('.')
+                actual_value = actual_dict
+                for part in parts:
+                    if isinstance(actual_value, dict) and part in actual_value:
+                        actual_value = actual_value[part]
+                    else:
+                        failures.append(f"Field '{field_name}' not found in output")
+                        actual_value = None
+                        break
+                if actual_value is None:
+                    continue
+            else:
+                # Check field exists
+                if field_name not in actual_dict:
+                    failures.append(f"Field '{field_name}' not found in output")
+                    continue
+                actual_value = actual_dict[field_name]
 
             # Apply appropriate validation
             if isinstance(validator, Exact):
