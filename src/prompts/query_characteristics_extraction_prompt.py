@@ -88,10 +88,11 @@ Analyse query characteristics through this systematic process:
 * Assess join requirements
 
 4. Advanced SQL Detection:
-* CTEs needed for comparisons or multi-step calculations
-* Window functions for ranking within groups
+* CTEs needed for comparisons or multi-step calculations (only include requires_cte if true)
+* Window functions for ranking within groups or accessing previous/next rows
 * CASE statements for pivoting or conditional logic
-* Set operations for combining results
+* Set operations (UNION/INTERSECT/EXCEPT) for combining multiple query results
+* Subqueries for nested SELECT statements (only include requires_subquery if true)
 
 5. Output Generation:
 * Create minimal XML with only necessary elements
@@ -107,6 +108,7 @@ Your response must follow this XML structure, including ONLY elements with value
 <sql_feasible>true|false</sql_feasible>
 <confidence>0.0-1.0</confidence>
 <patterns>
+<!-- Always include patterns, even for infeasible queries -->
 <pattern>PATTERN_NAME</pattern>
 <!-- Repeat for each applicable pattern -->
 </patterns>
@@ -119,10 +121,10 @@ Your response must follow this XML structure, including ONLY elements with value
 <filter column="column_name" operator="=|!=|>|<|>=|<=|ILIKE|IN|BETWEEN|IS NULL|IS NOT NULL"/>
 <!-- Repeat for multiple filters -->
 
-<group_by>column_name_or_expression</group_by>
+<group_by>column_name</group_by>
 <!-- Repeat for multiple grouping dimensions -->
 
-<order_by column="column_name" direction="ASC|DESC"/>
+<order_by column="column_name_or_alias" direction="ASC|DESC"/>
 <!-- Include only if ordering needed -->
 
 <limit>number</limit>
@@ -131,39 +133,61 @@ Your response must follow this XML structure, including ONLY elements with value
 <join table="budgets" on="category_code"/>
 <!-- Include only if budgets table is needed; always joins on category_code -->
 
-<!-- Advanced operations - include only when needed -->
+<!-- Advanced operations - include ONLY when actually needed -->
 <requires_cte>true</requires_cte>
-<cte_purpose>description</cte_purpose>
+<cte_purpose>description_in_15_words_or_less</cte_purpose>
+<!-- Include both requires_cte AND cte_purpose together when CTEs are needed -->
 
-<window_function type="ROW_NUMBER|RANK|DENSE_RANK|LAG|LEAD" partition_by="column" order_by="column"/>
+<window_function type="ROW_NUMBER|RANK|DENSE_RANK|LAG|LEAD" partition_by="column_name" order_by="column_name"/>
+<!-- Include only when window functions are needed -->
 
-<case_statement purpose="description"/>
+<case_statement purpose="description_in_15_words_or_less"/>
+<!-- Include only when CASE statements are needed -->
 
 <set_operation>UNION|UNION ALL|INTERSECT|EXCEPT</set_operation>
+<!-- Include only when combining multiple query results -->
 
 <requires_subquery>true</requires_subquery>
+<!-- Include only when nested SELECT statements are needed -->
 </operations>
 
-<!-- Include missing_requirement only if sql_feasible=false -->
-<missing_requirement>
-<type>type_of_missing_info</type>
-<description>clear_explanation</description>
-<severity>critical|warning</severity>
-<resolution>possible_solution</resolution>
-<!-- Repeat resolution for multiple options -->
-</missing_requirement>
+<!-- Include missing_requirements only if sql_feasible=false -->
+<missing_requirements>
+  <missing_requirement>
+    <type>type_of_missing_info</type>
+    <description>clear_explanation_in_20_words_or_less</description>
+    <severity>critical|warning</severity>
+    <resolutions>
+      <resolution>possible_solution_in_15_words_or_less</resolution>
+      <!-- Repeat resolution for multiple options -->
+    </resolutions>
+  </missing_requirement>
+  <!-- Repeat missing_requirement for multiple missing items -->
+</missing_requirements>
 
-<explanation>human_readable_explanation</explanation>
+<explanation>human_readable_explanation_in_20_words_or_less</explanation>
 </response>
 
 <format_rules>
 1. Generate only elements that have values - no empty tags
-2. Do not nest unnecessarily - keep structure flat
+2. Keep structure flat except for required nesting (operations, patterns, missing_requirements)
 3. Repeat elements for multiple items (multiple filters, multiple aggregations)
 4. Do NOT generate SQL expressions - only identify operations needed
-5. Column names should match schema exactly
+5. Column names should match schema exactly - no SQL expressions
 6. Operators should be SQL operators, not descriptions
-7. Use clear, concise explanations
+7. Word limits for conciseness:
+   - cte_purpose: Maximum 15 words
+   - case_statement purpose: Maximum 15 words
+   - missing_requirement description: Maximum 20 words
+   - missing_requirement resolution: Maximum 15 words per resolution
+   - explanation: Maximum 20 words
+8. Advanced operations: Only include elements when actually needed:
+   - requires_cte + cte_purpose: Include together when CTEs needed
+   - window_function: Include when window functions needed
+   - case_statement: Include when CASE logic needed
+   - set_operation: Include when combining multiple query results
+   - requires_subquery: Include when nested SELECTs needed
+9. Missing requirements: Wrap all in <missing_requirements>, each with its own <missing_requirement> block and <resolutions> container
 </format_rules>
 </output_format>
 
@@ -237,8 +261,8 @@ Your response must follow this XML structure, including ONLY elements with value
 <operations>
   <aggregation function="SUM" column="amount" alias="yearly_total"/>
   <filter column="category_code" operator="ILIKE"/>
-  <filter column="EXTRACT(year FROM transaction_booking_timestamp)" operator="IN"/>
-  <group_by>EXTRACT(year FROM transaction_booking_timestamp)</group_by>
+  <filter column="transaction_booking_timestamp" operator="BETWEEN"/>
+  <group_by>transaction_booking_timestamp</group_by>
   <requires_cte>true</requires_cte>
   <cte_purpose>Aggregate by year then pivot for percentage calculation</cte_purpose>
   <case_statement purpose="Pivot years to columns for comparison"/>
@@ -280,7 +304,7 @@ Your response must follow this XML structure, including ONLY elements with value
   <pattern>AGGREGATION</pattern>
 </patterns>
 <operations>
-  <aggregation function="SUM" column="tx.amount" alias="actual_spend"/>
+  <aggregation function="SUM" column="amount" alias="actual_spend"/>
   <filter column="category_code" operator="ILIKE"/>
   <filter column="transaction_booking_timestamp" operator=">="/>
   <group_by>category_code</group_by>
@@ -322,15 +346,60 @@ Your response must follow this XML structure, including ONLY elements with value
 <patterns>
   <pattern>LISTING</pattern>
 </patterns>
-<missing_requirement>
-  <type>amount_threshold</type>
-  <description>Cannot determine numeric threshold for 'big purchases' - term is subjective and requires specific amount</description>
-  <severity>critical</severity>
-  <resolution>Request specific amount from user</resolution>
-  <resolution>Use 90th percentile of transaction history</resolution>
-  <resolution>Apply default threshold of £100</resolution>
-</missing_requirement>
+<missing_requirements>
+  <missing_requirement>
+    <type>amount_threshold</type>
+    <description>Cannot determine numeric threshold for 'big purchases'</description>
+    <severity>critical</severity>
+    <resolutions>
+      <resolution>Request specific amount from user</resolution>
+      <resolution>Use 90th percentile of transaction history</resolution>
+      <resolution>Apply default threshold of £100</resolution>
+    </resolutions>
+  </missing_requirement>
+</missing_requirements>
 <explanation>Cannot generate SQL without defining what constitutes a 'big' purchase</explanation>
+</response>
+</example>
+
+<example label="multiple missing requirements">
+<query>Show me large credit card purchases in London</query>
+<processable_entities>
+[]
+</processable_entities>
+<response>
+<sql_feasible>false</sql_feasible>
+<confidence>0.15</confidence>
+<patterns>
+  <pattern>LISTING</pattern>
+</patterns>
+<missing_requirements>
+  <missing_requirement>
+    <type>amount_threshold</type>
+    <description>Cannot determine what constitutes 'large' purchases</description>
+    <severity>critical</severity>
+    <resolutions>
+      <resolution>Request specific amount threshold from user</resolution>
+    </resolutions>
+  </missing_requirement>
+  <missing_requirement>
+    <type>payment_method</type>
+    <description>Payment method data not available in transaction schema</description>
+    <severity>critical</severity>
+    <resolutions>
+      <resolution>Cannot filter by payment method</resolution>
+    </resolutions>
+  </missing_requirement>
+  <missing_requirement>
+    <type>geographic_location</type>
+    <description>Transaction location data not available in schema</description>
+    <severity>critical</severity>
+    <resolutions>
+      <resolution>Cannot filter by geographic location</resolution>
+    </resolutions>
+  </missing_requirement>
+</missing_requirements>
+<explanation>Multiple critical data elements missing for this query</explanation>
 </response>
 </example>
 
@@ -349,8 +418,8 @@ Your response must follow this XML structure, including ONLY elements with value
 <operations>
   <aggregation function="SUM" column="amount" alias="monthly_spend"/>
   <filter column="transaction_booking_timestamp" operator=">="/>
-  <group_by>strftime(transaction_booking_timestamp, '%Y-%m')</group_by>
-  <order_by column="strftime(transaction_booking_timestamp, '%Y-%m')" direction="ASC"/>
+  <group_by>transaction_booking_timestamp</group_by>
+  <order_by column="transaction_booking_timestamp" direction="ASC"/>
 </operations>
 <explanation>Aggregates spending by month for current year to show spending trend</explanation>
 </response>
@@ -392,12 +461,11 @@ Your response must follow this XML structure, including ONLY elements with value
 <operations>
   <aggregation function="AVG" column="daily_total" alias="avg_daily_spend"/>
   <filter column="transaction_booking_timestamp" operator=">="/>
-  <group_by>EXTRACT(year FROM transaction_booking_timestamp)</group_by>
+  <group_by>transaction_booking_timestamp</group_by>
   <group_by>category_code</group_by>
-  <group_by>DATE_TRUNC('day', transaction_booking_timestamp)</group_by>
   <requires_cte>true</requires_cte>
   <cte_purpose>Calculate daily totals first, then averages, then year comparison</cte_purpose>
-  <set_operation>FULL OUTER JOIN</set_operation>
+  <window_function type="ROW_NUMBER" partition_by="category_code" order_by="avg_daily_spend"/>
   <case_statement purpose="Calculate percentage change between years"/>
 </operations>
 <explanation>Complex multi-step calculation comparing average daily spending by category between consecutive years</explanation>
@@ -424,6 +492,13 @@ Your response must follow this XML structure, including ONLY elements with value
    - Listing queries → Default limit 50-100
    - "Recent" → Implies chronological ordering with limit
    - "Summary" → Implies some form of aggregation or limit
+
+5. Understanding advanced operations:
+   - Set operations (UNION/INTERSECT/EXCEPT): Need to combine results from multiple separate queries
+   - Subqueries: Need nested SELECT for filtering based on aggregated values or derived results
+   - CTEs: Multi-step calculations that build on previous results
+   - Window functions: Calculations across rows while preserving row-level detail
+   - CASE statements: Conditional logic or pivoting data into columns
 </edge_cases>
 </instructions>"""
     return instructions
