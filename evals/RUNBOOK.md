@@ -12,8 +12,11 @@ This runbook provides instructions for running and managing the evaluation frame
 # Run all CategoryNormalisationAgent tests
 python evals/tests/test_eval_decorated_category_normalisation.py
 
-# Run tests with specific tags
+# Run tests with a single tag
 python evals/tests/test_eval_decorated_category_normalisation.py --tags valid
+
+# Run tests with multiple tags (AND logic - must have ALL tags)
+python evals/tests/test_eval_decorated_category_normalisation.py --tags valid merchant
 
 # Run specific cases by name
 python evals/tests/test_eval_decorated_category_normalisation.py --cases case_name_1 case_name_2
@@ -25,7 +28,7 @@ python evals/tests/test_eval_decorated_category_normalisation.py --cases case_na
 # Run all ProcessableEntityExtractionAgent tests
 python evals/tests/test_eval_decorated_processable_entity_extraction.py
 
-# Run tests with specific tags
+# Run tests with a single tag
 python evals/tests/test_eval_decorated_processable_entity_extraction.py --tags category
 
 # Run tests with multiple tags (AND logic - must have ALL tags)
@@ -41,8 +44,11 @@ python evals/tests/test_eval_decorated_processable_entity_extraction.py --cases 
 # Run all QueryCharacteristicsExtractionAgent tests
 python evals/tests/test_eval_decorated_query_characteristics_extraction.py
 
-# Run tests with specific tags
-python evals/tests/test_eval_decorated_query_characteristics_extraction.py --tags simple
+# Run tests with a single tag
+python evals/tests/test_eval_decorated_query_characteristics_extraction.py --tags infeasible
+
+# Run tests with multiple tags (AND logic - must have ALL tags)
+python evals/tests/test_eval_decorated_query_characteristics_extraction.py --tags aggregation feasible
 
 # Run specific cases by name
 python evals/tests/test_eval_decorated_query_characteristics_extraction.py --cases case_name_1 case_name_2
@@ -70,8 +76,11 @@ python evals/tests/test_eval_decorated_query_security_validation.py --cases clea
 # Run all UnprocessableEntityExtractionAgent tests
 python evals/tests/test_eval_decorated_unprocessable_entity_extraction.py
 
-# Run tests with specific tags
+# Run tests with a single tag
 python evals/tests/test_eval_decorated_unprocessable_entity_extraction.py --tags clarification
+
+# Run tests with multiple tags (AND logic - must have ALL tags)
+python evals/tests/test_eval_decorated_unprocessable_entity_extraction.py --tags clarification temporal
 
 # Run specific cases by name
 python evals/tests/test_eval_decorated_unprocessable_entity_extraction.py --cases case_name_1 case_name_2
@@ -83,8 +92,11 @@ python evals/tests/test_eval_decorated_unprocessable_entity_extraction.py --case
 # Run all UserIntentValidationAgent tests
 python evals/tests/test_eval_decorated_user_intent_validation.py
 
-# Run tests with specific tags
+# Run tests with a single tag
 python evals/tests/test_eval_decorated_user_intent_validation.py --tags valid
+
+# Run tests with multiple tags (AND logic - must have ALL tags)
+python evals/tests/test_eval_decorated_user_intent_validation.py --tags valid banking
 
 # Run specific cases by name
 python evals/tests/test_eval_decorated_user_intent_validation.py --cases case_name_1 case_name_2
