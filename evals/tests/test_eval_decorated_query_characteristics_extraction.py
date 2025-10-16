@@ -3,6 +3,7 @@
 Runner for QueryCharacteristicsExtractionAgent evaluation cases using the decorator pattern.
 """
 
+import argparse
 import asyncio
 from typing import Any, Dict, Optional, List
 
@@ -23,7 +24,8 @@ from src.models.query_characteristics_models import QueryCharacteristicsInput, Q
 async def run_query_characteristics_evals(
     llm_client: LLMClientInterface,
     case_names: Optional[List[str]] = None,
-    tags: Optional[List[str]] = None
+    tags: Optional[List[str]] = None,
+    tags_match_all: bool = True
 ) -> List[EvalResult]:
     """
     Run evaluation cases for QueryCharacteristicsExtractionAgent.
@@ -32,6 +34,7 @@ async def run_query_characteristics_evals(
         llm_client: The LLM client to use
         case_names: Optional list of specific case names to run
         tags: Optional list of tags to filter cases by
+        tags_match_all: If True, cases must have ALL tags (AND). If False, cases with ANY tag (OR).
 
     Returns:
         List of evaluation results
@@ -57,8 +60,30 @@ async def run_query_characteristics_evals(
         cases: List[EvalCase] = registry.get_cases(names=case_names)
         print(f"Running specific cases: {case_names}")
     elif tags:
-        cases: List[EvalCase] = registry.get_cases(tags=tags)
-        print(f"Running cases with tags: {tags}")
+        if tags_match_all:
+            # For AND logic, we need to filter cases that have ALL specified tags
+            # The registry stores metadata on the function objects
+            matching_cases: List[EvalCase] = []
+
+            # Get all cases and check their metadata
+            for name, func in registry._functions.items():
+                metadata: Dict[str, Any] = getattr(func, "eval_metadata", {})
+                case_tags: List[str] = metadata.get("tags", [])
+
+                # Check if this case has ALL the required tags
+                if all(tag in case_tags for tag in tags):
+                    case: Optional[EvalCase] = registry.get_case(name)
+                    if case:
+                        matching_cases.append(case)
+
+            cases: List[EvalCase] = matching_cases
+            print(f"Running cases with ALL tags: {tags} (AND logic)")
+            print(f"Filtered cases: {len(cases)} out of {summary['total_cases']} total")
+        else:
+            # Get cases with ANY of the tags (default registry behavior)
+            cases: List[EvalCase] = registry.get_cases(tags=tags)
+            print(f"Running cases with ANY tags: {tags} (OR logic)")
+            print(f"Filtered cases: {len(cases)} out of {summary['total_cases']} total")
     else:
         cases: List[EvalCase] = registry.get_all_cases()
         print(f"Running all {len(cases)} cases")
@@ -104,31 +129,72 @@ async def run_query_characteristics_evals(
     return results
 
 
-async def main():
+def parse_arguments():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Run evaluation cases for QueryCharacteristicsExtractionAgent",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run all tests
+  python -m evals.tests.test_eval_decorated_query_characteristics_extraction
+
+  # Run tests with a single tag
+  python -m evals.tests.test_eval_decorated_query_characteristics_extraction --tags feasible
+
+  # Run tests that have ALL specified tags (AND logic)
+  python -m evals.tests.test_eval_decorated_query_characteristics_extraction --tags aggregation feasible
+
+  # Run tests with specific case names
+  python -m evals.tests.test_eval_decorated_query_characteristics_extraction --cases simple_aggregation_transport grouped_ranking_merchants
+
+Available tags:
+  aggregation, basic, budget, comparison, complex, cte, dev_cases, feasible,
+  grouped, infeasible, join, listing, merchant, missing, multiple_missing,
+  ranking, snapshot, subscription, trend, window
+        """
+    )
+
+    parser.add_argument(
+        "--tags",
+        nargs="+",
+        help="Run cases that have ALL specified tags (AND logic). Example: --tags aggregation feasible"
+    )
+
+    parser.add_argument(
+        "--cases",
+        nargs="+",
+        help="Run specific cases by name. Example: --cases simple_aggregation_transport grouped_ranking_merchants"
+    )
+
+    return parser.parse_args()
+
+
+async def main() -> List[EvalResult]:
     """Main entry point."""
+    # Parse command-line arguments
+    args = parse_arguments()
+
     # Get LLM client from centralized config
     llm_client: LLMClientInterface = get_llm_client_or_exit()
 
-    # Run all evaluations
-    results: List[EvalResult] = await run_query_characteristics_evals(llm_client)
-
-    # Example: Run only specific tags
-    # results = await run_query_characteristics_evals(
-    #     llm_client,
-    #     tags=["aggregation", "feasible"]
-    # )
-
-    # Example: Run specific cases
-    # results = await run_query_characteristics_evals(
-    #     llm_client,
-    #     case_names=["simple_aggregation_transport", "grouped_ranking_merchants"]
-    # )
-
-    # Example: Run only infeasible cases
-    # results = await run_query_characteristics_evals(
-    #     llm_client,
-    #     tags=["infeasible"]
-    # )
+    # Run evaluations based on arguments
+    if args.cases:
+        # Run specific cases by name
+        results: List[EvalResult] = await run_query_characteristics_evals(
+            llm_client,
+            case_names=args.cases
+        )
+    elif args.tags:
+        # Run cases with specified tags (AND logic)
+        results: List[EvalResult] = await run_query_characteristics_evals(
+            llm_client,
+            tags=args.tags,
+            tags_match_all=True  # Use AND logic for multiple tags
+        )
+    else:
+        # Run all evaluations
+        results: List[EvalResult] = await run_query_characteristics_evals(llm_client)
 
     return results
 
