@@ -6,21 +6,93 @@ This runbook provides instructions for running and managing the evaluation frame
 
 ### Running All Tests for an Agent
 
+#### CategoryNormalisationAgent
+
+```bash
+# Run all CategoryNormalisationAgent tests
+python evals/tests/test_eval_decorated_category_normalisation.py
+
+# Run tests with specific tags
+python evals/tests/test_eval_decorated_category_normalisation.py --tags valid
+
+# Run specific cases by name
+python evals/tests/test_eval_decorated_category_normalisation.py --cases case_name_1 case_name_2
+```
+
+#### ProcessableEntityExtractionAgent
+
 ```bash
 # Run all ProcessableEntityExtractionAgent tests
 python evals/tests/test_eval_decorated_processable_entity_extraction.py
 
-# Run with verbose output
-python evals/tests/test_eval_decorated_processable_entity_extraction.py -v
-
-# Run specific test by name
-python evals/tests/test_eval_decorated_processable_entity_extraction.py -k test_budget_query
-
 # Run tests with specific tags
-python evals/tests/test_eval_decorated_processable_entity_extraction.py -k category
+python evals/tests/test_eval_decorated_processable_entity_extraction.py --tags category
+
+# Run tests with multiple tags (AND logic - must have ALL tags)
+python evals/tests/test_eval_decorated_processable_entity_extraction.py --tags category temporal
+
+# Run specific cases by name
+python evals/tests/test_eval_decorated_processable_entity_extraction.py --cases test_budget_query test_transfer_query
 ```
 
-### Running with pytest (recommended)
+#### QueryCharacteristicsExtractionAgent
+
+```bash
+# Run all QueryCharacteristicsExtractionAgent tests
+python evals/tests/test_eval_decorated_query_characteristics_extraction.py
+
+# Run tests with specific tags
+python evals/tests/test_eval_decorated_query_characteristics_extraction.py --tags simple
+
+# Run specific cases by name
+python evals/tests/test_eval_decorated_query_characteristics_extraction.py --cases case_name_1 case_name_2
+```
+
+#### QuerySecurityValidationAgent
+
+```bash
+# Run all QuerySecurityValidationAgent tests
+python evals/tests/test_eval_decorated_query_security_validation.py
+
+# Run tests with specific tags
+python evals/tests/test_eval_decorated_query_security_validation.py --tags invalid
+
+# Run tests with multiple tags (AND logic - must have ALL tags)
+python evals/tests/test_eval_decorated_query_security_validation.py --tags invalid sql_injection
+
+# Run specific cases by name
+python evals/tests/test_eval_decorated_query_security_validation.py --cases clean_spending_query sql_injection_drop
+```
+
+#### UnprocessableEntityExtractionAgent
+
+```bash
+# Run all UnprocessableEntityExtractionAgent tests
+python evals/tests/test_eval_decorated_unprocessable_entity_extraction.py
+
+# Run tests with specific tags
+python evals/tests/test_eval_decorated_unprocessable_entity_extraction.py --tags clarification
+
+# Run specific cases by name
+python evals/tests/test_eval_decorated_unprocessable_entity_extraction.py --cases case_name_1 case_name_2
+```
+
+#### UserIntentValidationAgent
+
+```bash
+# Run all UserIntentValidationAgent tests
+python evals/tests/test_eval_decorated_user_intent_validation.py
+
+# Run tests with specific tags
+python evals/tests/test_eval_decorated_user_intent_validation.py --tags valid
+
+# Run specific cases by name
+python evals/tests/test_eval_decorated_user_intent_validation.py --cases case_name_1 case_name_2
+```
+
+### Running with pytest (alternative approach)
+
+**Note:** The evaluation test files are standalone Python scripts with custom argument parsers (`--tags` and `--cases`). However, you can also run them via pytest using the `-k` flag for pattern matching on test/case names (not tags).
 
 ```bash
 # Run all evaluation tests
@@ -29,7 +101,7 @@ pytest evals/tests/ -v
 # Run specific test file
 pytest evals/tests/test_eval_decorated_processable_entity_extraction.py -v
 
-# Run tests matching pattern
+# Run tests matching pattern by name (uses pytest -k flag, NOT the same as --tags)
 pytest evals/tests/ -k "budget" -v
 
 # Run with coverage report
@@ -39,15 +111,43 @@ pytest evals/tests/ --cov=src --cov-report=html
 pytest evals/tests/ -n auto
 ```
 
+**Important distinction:**
+- **Standalone mode** (recommended): `python evals/tests/test_file.py --tags tag_name` - Uses custom argparse with `--tags` for tag filtering and `--cases` for case name filtering
+- **Pytest mode**: `pytest evals/tests/ -k "pattern"` - Uses pytest's `-k` flag for pattern matching on test names only (cannot filter by tags)
+
 ## Test Organization
 
 ### Current Test Files
 
-1. **`test_eval_decorated_processable_entity_extraction.py`**
-   
-```bash
-python evals/tests/test_eval_decorated_processable_entity_extraction.py
-```
+1. **`test_eval_decorated_category_normalisation.py`**
+   ```bash
+   python evals/tests/test_eval_decorated_category_normalisation.py
+   ```
+
+2. **`test_eval_decorated_processable_entity_extraction.py`**
+   ```bash
+   python evals/tests/test_eval_decorated_processable_entity_extraction.py
+   ```
+
+3. **`test_eval_decorated_query_characteristics_extraction.py`**
+   ```bash
+   python evals/tests/test_eval_decorated_query_characteristics_extraction.py
+   ```
+
+4. **`test_eval_decorated_query_security_validation.py`**
+   ```bash
+   python evals/tests/test_eval_decorated_query_security_validation.py
+   ```
+
+5. **`test_eval_decorated_unprocessable_entity_extraction.py`**
+   ```bash
+   python evals/tests/test_eval_decorated_unprocessable_entity_extraction.py
+   ```
+
+6. **`test_eval_decorated_user_intent_validation.py`**
+   ```bash
+   python evals/tests/test_eval_decorated_user_intent_validation.py
+   ```
 
 ## Adding New Test Cases
 
