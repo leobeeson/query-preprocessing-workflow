@@ -114,6 +114,28 @@ class ResultWriter:
             if hasattr(r, 'output_tokens') and r.output_tokens
         )
 
+        # Calculate cache token statistics
+        total_cache_write_tokens = sum(
+            r.cache_write_tokens for r in results
+            if hasattr(r, 'cache_write_tokens') and r.cache_write_tokens
+        )
+
+        total_cache_read_tokens = sum(
+            r.cache_read_tokens for r in results
+            if hasattr(r, 'cache_read_tokens') and r.cache_read_tokens
+        )
+
+        # Calculate cache costs
+        total_cache_write_cost = sum(
+            r.cache_write_cost for r in results
+            if hasattr(r, 'cache_write_cost') and r.cache_write_cost
+        )
+
+        total_cache_read_cost = sum(
+            r.cache_read_cost for r in results
+            if hasattr(r, 'cache_read_cost') and r.cache_read_cost
+        )
+
         # Calculate averages (only count cases that have token data)
         cases_with_tokens = sum(
             1 for r in results
@@ -128,6 +150,22 @@ class ResultWriter:
         avg_output_tokens = (
             round(total_output_tokens / cases_with_tokens, 2)
             if cases_with_tokens > 0 else 0
+        )
+
+        # Calculate averages for cache tokens
+        cases_with_cache = sum(
+            1 for r in results
+            if hasattr(r, 'cache_write_tokens') and r.cache_write_tokens is not None
+        )
+
+        avg_cache_write_tokens = (
+            round(total_cache_write_tokens / cases_with_cache, 2)
+            if cases_with_cache > 0 else 0
+        )
+
+        avg_cache_read_tokens = (
+            round(total_cache_read_tokens / cases_with_cache, 2)
+            if cases_with_cache > 0 else 0
         )
 
         # Build summary
@@ -146,6 +184,12 @@ class ResultWriter:
             "total_output_tokens": total_output_tokens,
             "average_input_tokens_per_case": avg_input_tokens,
             "average_output_tokens_per_case": avg_output_tokens,
+            "total_cache_write_tokens": total_cache_write_tokens,
+            "total_cache_read_tokens": total_cache_read_tokens,
+            "average_cache_write_tokens_per_case": avg_cache_write_tokens,
+            "average_cache_read_tokens_per_case": avg_cache_read_tokens,
+            "total_cache_write_cost": round(total_cache_write_cost, 6),
+            "total_cache_read_cost": round(total_cache_read_cost, 6),
         }
 
         # Add metadata if provided

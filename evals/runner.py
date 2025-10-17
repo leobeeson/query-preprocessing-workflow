@@ -193,7 +193,11 @@ class EvalRunner(Generic[TInput, TOutput]):
                     duration_ms=duration_ms,
                     llm_cost=metrics.total_cost if metrics else None,
                     input_tokens=metrics.input_tokens if metrics else None,
-                    output_tokens=metrics.output_tokens if metrics else None
+                    output_tokens=metrics.output_tokens if metrics else None,
+                    cache_write_tokens=metrics.cache_write_tokens if metrics else None,
+                    cache_read_tokens=metrics.cache_read_tokens if metrics else None,
+                    cache_write_cost=metrics.cache_write_cost if metrics else None,
+                    cache_read_cost=metrics.cache_read_cost if metrics else None
                 )
 
                 # Save result if configured

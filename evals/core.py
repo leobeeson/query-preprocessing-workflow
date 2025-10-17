@@ -61,6 +61,10 @@ class EvalResult(BaseModel):
     llm_cost: Optional[float] = Field(default=None, description="LLM API cost in USD")
     input_tokens: Optional[int] = Field(default=None, description="Input tokens used")
     output_tokens: Optional[int] = Field(default=None, description="Output tokens used")
+    cache_write_tokens: Optional[int] = Field(default=None, description="Cache write tokens used")
+    cache_read_tokens: Optional[int] = Field(default=None, description="Cache read tokens used")
+    cache_write_cost: Optional[float] = Field(default=None, description="Cache write cost in USD")
+    cache_read_cost: Optional[float] = Field(default=None, description="Cache read cost in USD")
     
     def __str__(self) -> str:
         """String representation for clear reporting."""
