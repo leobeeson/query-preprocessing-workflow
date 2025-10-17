@@ -139,6 +139,7 @@ class ResultWriter:
             "failed": failed,
             "pass_rate": round(pass_rate, 2),
             "total_duration_ms": total_duration_ms,
+            "average_duration_ms_per_case": round(total_duration_ms / total_cases, 2) if total_cases > 0 else 0,
             "total_cost_usd": round(total_cost, 6),
             "average_cost_per_case": round(total_cost / total_cases, 6) if total_cases > 0 else 0,
             "total_input_tokens": total_input_tokens,

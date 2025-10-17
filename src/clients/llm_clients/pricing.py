@@ -66,6 +66,11 @@ class PricingConfig:
             input_cost_per_million=3.0,    # $3 per million input tokens
             output_cost_per_million=15.0   # $15 per million output tokens
         ),
+        # Claude Haiku 4.5
+        "claude-haiku-4-5-20251001": ModelPricing(
+            input_cost_per_million=1.0,   # $1.0 per million input tokens
+            output_cost_per_million=5.0    # $5 per million output tokens
+        ),
         # Claude Haiku 3.5
         "claude-3-5-haiku-20241022": ModelPricing(
             input_cost_per_million=0.80,   # $0.80 per million input tokens
