@@ -93,12 +93,45 @@ class QuerySecurityValidationOutput(BaseModel):
         default=None,
         description="Raw LLM response for debugging"
     )
-    
+
     class Config:
         json_schema_extra = {
             "example": {
                 "valid": True,
                 "justification": "Clean natural language query",
+                "raw_response": "<response>...</response>"
+            }
+        }
+
+
+class PIIEntity(BaseModel):
+    """Model for a PII entity extracted from user query"""
+    type: str = Field(
+        description="The type of PII entity. Expected values: phone, name, email, username, password, cvv, card_number, card_expiry, pin, bank_account, swift_code, aws_key, nhs_number, ni_number, utr_number, other"
+    )
+    value: str = Field(
+        description="The exact text value from the query"
+    )
+
+
+class PIIExtractionOutput(BaseModel):
+    """Output model for PIIExtractionAgent"""
+    entities: List[PIIEntity] = Field(
+        default_factory=list,
+        description="List of extracted PII entities"
+    )
+    raw_response: Optional[str] = Field(
+        default=None,
+        description="Raw LLM response for debugging"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "entities": [
+                    {"type": "email", "value": "john.smith@gmail.com"},
+                    {"type": "phone", "value": "07700900123"}
+                ],
                 "raw_response": "<response>...</response>"
             }
         }
