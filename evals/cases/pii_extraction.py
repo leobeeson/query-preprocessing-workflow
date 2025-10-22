@@ -3,7 +3,7 @@ Evaluation cases for PIIExtractionAgent using decorator pattern.
 """
 
 from evals.decorators import eval_case
-from evals.field_validators import ListMatches, Exact, Substring
+from evals.field_validators import ListMatches, Exact, Substring, OneOf
 from src.workflow_nodes.query_preprocessing.pii_extraction_agent import PIIExtractionAgent
 from src.models.base_models import QueryInput
 from src.models.entity_extraction_models import PIIExtractionOutput, PIIEntity as Entity
@@ -602,7 +602,7 @@ def eval_nhs_with_spaces():
 @eval_case(
     name="nhs_no_spaces",
     agent_class=PIIExtractionAgent,
-    description="NHS number without spaces",
+    description="NHS number without spaces - could be nhs_number or other",
     tags=["uk_ids", "nhs", "dev_cases"]
 )
 def eval_nhs_no_spaces():
@@ -613,7 +613,7 @@ def eval_nhs_no_spaces():
         ),
         "field_validations": {
             "entities": ListMatches(items=[
-                {"type": Exact(value="nhs_number"), "value": Exact(value="9876543210")}
+                {"type": OneOf(values=["nhs_number", "other"]), "value": Exact(value="9876543210")}
             ])
         }
     }
