@@ -102,6 +102,20 @@ python evals/tests/test_eval_decorated_user_intent_validation.py --tags valid ba
 python evals/tests/test_eval_decorated_user_intent_validation.py --cases case_name_1 case_name_2
 ```
 
+#### PIIExtractionAgent
+
+```bash
+# Run all PIIExtractionAgent tests
+python -m evals.tests.test_eval_decorated_pii_extraction
+
+# Run specific tag(s)
+python -m evals.tests.test_eval_decorated_pii_extraction --tags financial
+python -m evals.tests.test_eval_decorated_pii_extraction --tags financial card
+
+# Run specific cases
+python -m evals.tests.test_eval_decorated_pii_extraction --cases nhs_no_spaces pii_with_transaction_context
+```
+
 ### Running with pytest (alternative approach)
 
 **Note:** The evaluation test files are standalone Python scripts with custom argument parsers (`--tags` and `--cases`). However, you can also run them via pytest using the `-k` flag for pattern matching on test/case names (not tags).
